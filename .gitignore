@@ -1,0 +1,23 @@
+# Ignore the virtual environment in the backend
+backend/bruno_server_venv/
+backend/__pycache__/
+backend/*.pyc
+
+# Ignore environment variables and other sensitive files
+backend/.env
+
+# Ignore files from Flutter that should not be in version control
+Bruno/build/
+Bruno/.dart_tool/
+Bruno/.packages
+Bruno/.flutter-plugins
+Bruno/.flutter-plugins-dependencies
+Bruno/.metadata
+Bruno/pubspec.lock
+
+# Ignore generated files from FastAPI backend
+backend/uploaded_folder/
+
+# Common system files to ignore
+.DS_Store
+Thumbs.db
