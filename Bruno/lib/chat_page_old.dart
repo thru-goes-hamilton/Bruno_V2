@@ -5,14 +5,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/file_icons.dart';
-import 'package:iconify_flutter/icons/iconoir.dart';
 import 'package:iconify_flutter/icons/carbon.dart';
 import 'package:iconify_flutter/icons/ic.dart';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'package:async/async.dart';
-import 'dart:typed_data';
+
 
 import 'constants.dart';
 
