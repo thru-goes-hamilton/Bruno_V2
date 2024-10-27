@@ -10,7 +10,6 @@ import 'package:iconify_flutter/icons/ic.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
-
 import 'constants.dart';
 
 class Bruno extends StatefulWidget {
@@ -241,6 +240,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    deleteAllFiles();
   }
 
   @override
