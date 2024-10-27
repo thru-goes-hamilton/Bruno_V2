@@ -55,7 +55,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
 
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('http://127.0.0.1:8000/upload'),
+          Uri.parse('https://bruno-v2.onrender.com/upload'),
         );
 
         request.files.add(
@@ -91,7 +91,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
 
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/delete/$fileName'),
+        Uri.parse('https://bruno-v2.onrender.com/delete/$fileName'),
       );
 
       if (response.statusCode == 200) {
@@ -135,7 +135,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
       var response = await http.Client().send(http.Request(
         'POST',
         Uri.parse(
-            'http://127.0.0.1:8000/query?prompt=$prompt'), // Ensure prompt is passed correctly
+            'https://bruno-v2.onrender.com/query?prompt=$prompt'), // Ensure prompt is passed correctly
       ));
 
       // Stream the response
@@ -172,7 +172,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   Future<void> extractAndVectorize() async {
     try {
       var response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/extract-and-vectorize'),
+        Uri.parse('https://bruno-v2.onrender.com/extract-and-vectorize'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -197,7 +197,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     try {
       // Send the HTTP POST request to the truncate endpoint
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/truncate'),
+        Uri.parse('https://bruno-v2.onrender.com/truncate'),
       );
 
       // Check if the response indicates success
@@ -219,7 +219,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     try {
       // Send the HTTP DELETE request to the delete-all endpoint
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/delete-all'),
+        Uri.parse('https://bruno-v2.onrender.com/delete-all'),
       );
 
       // Check if the response indicates success
