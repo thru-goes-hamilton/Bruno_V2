@@ -39,6 +39,7 @@ dependencies:
   iconify_flutter: ^0.0.5
   file_picker: ^8.0.0+1
   http: ^1.1.0
+  flutter_markdown: ^0.6.19
 
 dev_dependencies:
   flutter_test:

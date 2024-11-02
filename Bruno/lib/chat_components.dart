@@ -1,5 +1,6 @@
 import 'package:bruno/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class DynamicChatList extends StatelessWidget {
   final List<ChatMessage> messages;
@@ -10,7 +11,7 @@ class DynamicChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top:18,bottom: 0,left: 18,right: 18),
+      padding: const EdgeInsets.only(top: 18, bottom: 0, left: 18, right: 18),
       child: ListView.builder(
         itemCount: messages.length + (isLoading ? 1 : 0),
         itemBuilder: (context, index) {
@@ -25,7 +26,10 @@ class DynamicChatList extends StatelessWidget {
               ],
             );
           } else {
-            return Center(child: CircularProgressIndicator(color: kWhitePurple,));
+            return Center(
+                child: CircularProgressIndicator(
+              color: kWhitePurple,
+            ));
           }
         },
       ),
@@ -52,13 +56,52 @@ class DynamicChatList extends StatelessWidget {
                 ),
                 SizedBox(width: 18),
                 Flexible(
-                  child: Text(
-                    prompt,
-                    style: TextStyle(
-                      color: kWhitePurple,
-                      fontSize: 18,
-                      fontFamily: 'MerriweatherSans',
+                  child: MarkdownBody(
+                    data: prompt,
+                    styleSheet: MarkdownStyleSheet(
+                      // Base text style
+                      p: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 18,
+                        fontFamily: 'MerriweatherSans',
+                      ),
+                      // Bold text
+                      strong: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'MerriweatherSans',
+                      ),
+                      // Italic text
+                      em: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w300,
+                        fontStyle: FontStyle.italic,
+                        fontFamily: 'MerriweatherSans',
+                      ),
+                      // Headers
+                      h1: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'MerriweatherSans',
+                      ),
+                      h2: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'MerriweatherSans',
+                      ),
+                      // Code blocks
+                      code: TextStyle(
+                        color: kWhitePurple,
+                        fontSize: 16,
+                        fontFamily: 'monospace',
+                        backgroundColor: Colors.black12,
+                      ),
                     ),
+                    shrinkWrap: true, // Helps with fitting content in the Row
                   ),
                 ),
                 SizedBox(width: 9),
@@ -78,13 +121,57 @@ class DynamicChatList extends StatelessWidget {
         color: kDarkPurple,
         borderRadius: BorderRadius.all(Radius.circular(30)),
       ),
-      child: Text(
-        answer,
-        style: TextStyle(
-          color: kLighterWhitePurple,
-          fontSize: 18,
-          fontWeight: FontWeight.w300,
-          fontFamily: 'MerriweatherSans',
+      child: MarkdownBody(
+        data: answer,
+        styleSheet: MarkdownStyleSheet(
+          // Base text style
+          p: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 18,
+            fontWeight: FontWeight.w300,
+            fontFamily: 'MerriweatherSans',
+          ),
+          // Bold text
+          strong: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'MerriweatherSans',
+          ),
+          // Italic text
+          em: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 18,
+            fontWeight: FontWeight.w300,
+            fontStyle: FontStyle.italic,
+            fontFamily: 'MerriweatherSans',
+          ),
+          // Headers
+          h1: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'MerriweatherSans',
+          ),
+          h2: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'MerriweatherSans',
+          ),
+          h3: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'MerriweatherSans',
+          ),
+          // Code blocks
+          code: TextStyle(
+            color: kLighterWhitePurple,
+            fontSize: 16,
+            fontFamily: 'monospace',
+            backgroundColor: Colors.black26,
+          ),
         ),
       ),
     );
