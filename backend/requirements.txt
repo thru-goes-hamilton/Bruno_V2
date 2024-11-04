@@ -78,7 +78,6 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.13
 python-pptx==1.0.2
-pywin32==308
 PyYAML==6.0.2
 pyzmq==26.2.0
 regex==2024.9.11
