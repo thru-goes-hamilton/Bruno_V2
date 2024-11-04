@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:math';
 import 'package:bruno/chat_components.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +9,114 @@ import 'package:iconify_flutter/icons/carbon.dart';
 import 'package:iconify_flutter/icons/ic.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'constants.dart';
+
+class ChatHandler {
+  List<ChatMessage> messages = [];
+  bool isLoading = false;
+  final String sessionId; // Add this to store the session ID
+
+  ChatHandler({required this.sessionId});
+
+  Future<void> sendQuery(
+      String prompt, Function setState, BuildContext context) async {
+    if (prompt.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a prompt')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      messages.add(ChatMessage(prompt: prompt, answer: ''));
+    });
+
+    try {
+      // Prepare the chat history in the required format
+      final chatHistory = messages
+          .map((msg) => {
+                'role': 'user',
+                'content': msg.prompt,
+              })
+          .toList();
+
+      // If there are answers, add them to chat history
+      for (var i = 0; i < messages.length - 1; i++) {
+        if (messages[i].answer.isNotEmpty) {
+          chatHistory.insert(2 * i + 1, {
+            'role': 'assistant',
+            'content': messages[i].answer,
+          });
+        }
+      }
+
+      // Prepare the request body
+      final requestBody = {
+        'message': prompt,
+        'chat_history': chatHistory,
+        'use_rag': true // You can make this configurable if needed
+      };
+
+      // Create the request
+      final request = http.Request(
+        'POST',
+        Uri.parse('https://bruno-v2.onrender.com/query/$sessionId'),
+      );
+
+      request.headers['Content-Type'] = 'application/json';
+      request.body = json.encode(requestBody);
+
+      // Send the request and get the stream
+      final response = await http.Client().send(request);
+
+      // Handle the server-sent events
+      response.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen((String line) {
+        if (line.startsWith('data: ')) {
+          final data = line.substring(6); // Remove 'data: ' prefix
+          try {
+            final jsonData = json.decode(data);
+            final content = jsonData['content'];
+
+            if (content == '[DONE]') {
+              setState(() {
+                isLoading = false;
+              });
+            } else {
+              setState(() {
+                // Update the last message's answer with the new content
+                messages[messages.length - 1].answer += content;
+              });
+            }
+          } catch (e) {
+            print('Error parsing SSE data: $e');
+          }
+        }
+      }, onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+      }, cancelOnError: true);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending query: $e')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+}
 
 class Bruno extends StatefulWidget {
   const Bruno({super.key});
@@ -21,25 +127,37 @@ class Bruno extends StatefulWidget {
 
 class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
-  List<ChatMessage> messages = [];
-  bool isLoading = false;
+  late final ChatHandler chatHandler;
   bool isUploading = false;
   bool isDeleting = false;
-  bool isFirstUpload = true;
   String? fileName;
   String? fileType;
   String? cacheFileName;
+
+  List<ChatMessage> get messages => chatHandler.messages;
+  bool get isLoading => chatHandler.isLoading;
+  String get sessionId => chatHandler.sessionId;
+
+  String generateSessionId() {
+    final random = Random();
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+
+    // Generate 3 random lowercase letters
+    String randomLetters =
+        List.generate(3, (_) => letters[random.nextInt(letters.length)]).join();
+
+    // Generate 3 random numbers
+    String randomNumbers =
+        List.generate(3, (_) => random.nextInt(10).toString()).join();
+
+    // Combine them
+    return randomLetters + randomNumbers;
+  }
 
   Future<void> uploadFile() async {
     setState(() {
       isUploading = true;
     });
-
-    if (fileName != null) {
-      setState(() {
-        isFirstUpload = false;
-      });
-    }
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -54,7 +172,8 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
 
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('https://bruno-v2.onrender.com/upload'),
+          Uri.parse(
+              'https://bruno-v2.onrender.com/upload/${chatHandler.sessionId}'), // Include session_id in the URL
         );
 
         request.files.add(
@@ -90,7 +209,8 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
 
     try {
       final response = await http.delete(
-        Uri.parse('https://bruno-v2.onrender.com/delete/$fileName'),
+        Uri.parse(
+            'https://bruno-v2.onrender.com/delete/${chatHandler.sessionId}/$fileName'),
       );
 
       if (response.statusCode == 200) {
@@ -107,63 +227,6 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     } finally {
       setState(() {
         isDeleting = false;
-      });
-    }
-  }
-
-  Future<void> sendQuery() async {
-    String prompt = _controller.text.trim();
-    if (prompt.isEmpty) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-        SnackBar(content: Text('Please enter a prompt')),
-      );
-      return;
-    }
-
-    setState(() {
-      isLoading = true; // Show loading state
-    });
-
-    // Add the user prompt to the messages list
-    messages.add(ChatMessage(prompt: prompt, answer: ''));
-    _controller.clear(); // Clear the text field
-
-    // Call the FastAPI endpoint
-    try {
-      print("Sending request to backend...");
-      var response = await http.Client().send(http.Request(
-        'POST',
-        Uri.parse(
-            'https://bruno-v2.onrender.com/query?prompt=$prompt'), // Ensure prompt is passed correctly
-      ));
-
-      // Stream the response
-      response.stream.transform(utf8.decoder).listen((data) {
-        print("Recieved data chunk: $data");
-        setState(() {
-          // Update the last message's answer with the streamed data
-          messages[messages.length - 1].answer += data;
-        });
-      }, onDone: () {
-        print("Stream completed");
-        setState(() {
-          isLoading = false;
-          // messages[messages.length - 1].answer// Hide loading state when done
-        });
-      }, onError: (error) {
-        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
-        setState(() {
-          isLoading = false; // Hide loading state on error
-        });
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-        SnackBar(content: Text('Error sending query: $e')),
-      );
-      setState(() {
-        isLoading = false; // Hide loading state on error
       });
     }
   }
@@ -218,7 +281,8 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     try {
       // Send the HTTP DELETE request to the delete-all endpoint
       final response = await http.delete(
-        Uri.parse('https://bruno-v2.onrender.com/delete-all'),
+        Uri.parse(
+            'https://bruno-v2.onrender.com/delete-session/${chatHandler.sessionId}'),
       );
 
       // Check if the response indicates success
@@ -236,10 +300,21 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> sendQuery() async {
+    await chatHandler.sendQuery(
+      _controller.text.trim(),
+      setState,
+      context as BuildContext,
+    );
+    _controller.clear();
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    chatHandler = ChatHandler(sessionId: generateSessionId());
+    print('Generated Session ID: $sessionId');
     deleteAllFiles();
   }
 
@@ -410,7 +485,13 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                                         )
                                       : Iconify(Ic.round_attach_file,
                                           size: 20, color: kWhitePurple),
-                                  onPressed: isUploading ? null : uploadFile,
+                                  onPressed: () {
+                                    if (!isUploading) {
+                                      // Call uploadFile and another function here
+                                      uploadFile();
+                                      extractAndVectorize();
+                                    }
+                                  },
                                   padding: EdgeInsets.zero,
                                 ),
                               ),
