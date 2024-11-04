@@ -182,12 +182,6 @@ async def extract_and_vectorize_route():
             ]
         )
 
-        contextualize_q_prompt = ChatPromptTemplate.from_messages([
-            ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("chat_history"),
-            ("human", "{input}"),
-        ])
-
         history_aware_retriever = create_history_aware_retriever(
             llm, global_retriever, contextualize_q_prompt
         )
@@ -259,18 +253,81 @@ async def extract_and_vectorize_route():
         )
 
 async def generate_stream(request: ChatRequest, session_id: str):
+
     """Generator function for streaming responses"""
     if global_langgraph_app is None:
         raise HTTPException(
             status_code=500,
             detail="LangGraph app not initialized. Please run extraction first."
+        )      
+
+
+    if any(UPLOAD_FOLDER.glob("*")):
+        # Check if session-specific folder has files
+        session_folder = UPLOAD_FOLDER / session_id
+        use_rag = any(session_folder.glob("*"))   # True if folder is not empty, False if empty
+    else:
+        use_rag  = False
+
+    if not use_rag:
+        direct_system_prompt = (
+            "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
+            "Answer the question based on your general knowledge while maintaining a helpful and informative tone. "
         )
 
-    # Check if session-specific folder has files
-    session_folder = UPLOAD_FOLDER / session_id
-    use_rag = any(session_folder.glob("*"))  # True if folder is not empty, False if empty
+        direct_qa_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", direct_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
 
-    config = {"configurable": {"thread_id": "abc123"}}
+        direct_chain = direct_qa_prompt | llm
+
+        class State(TypedDict):
+            input: str
+            chat_history: Annotated[Sequence[BaseMessage], add_messages]
+            context: str
+            answer: str
+            use_rag: bool
+
+
+        async def call_model(state: State):
+            accumulated_state = {
+                "chat_history": [],
+                "context": "",
+                "answer": ""
+            }
+                
+            
+            async for chunk in direct_chain.astream({
+                "input": state["input"],
+                "chat_history": state["chat_history"]
+            }):
+                message_chunk = AIMessageChunk(content=chunk.content)
+                yield {"messages": [message_chunk]}
+                accumulated_state["answer"] += chunk.content
+                        
+            yield {
+                "chat_history": [
+                    HumanMessage(state["input"]),
+                    AIMessage(accumulated_state["answer"]),
+                ],
+                "context": accumulated_state["context"],
+                "answer": accumulated_state["answer"]
+            }
+
+        # Create and store LangGraph app
+        workflow = StateGraph(state_schema=State)
+        workflow.add_edge(START, "model")
+        workflow.add_node("model", call_model)
+
+        memory = MemorySaver()
+        global_langgraph_app = workflow.compile(checkpointer=memory)
+    
+
+    config = {"configurable": {"thread_id": session_id}}
     first = True
     gathered = None
 
