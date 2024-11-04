@@ -506,10 +506,8 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                                 child: IconButton(
                                   icon: Iconify(Carbon.send_filled,
                                       size: 20, color: kWhitePurple),
-                                  onPressed: () {
-                                    setState(() async {
-                                      await sendQuery();
-                                    });
+                                  onPressed: () async {
+                                      await sendQuery();                                    
                                   },
                                 ),
                               ),
