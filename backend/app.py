@@ -136,7 +136,7 @@ async def extract_and_vectorize_route(session_id:str):
         bm25_retriever.k = 2
 
         index_name="bruno"
-        # Your Pinecone setup...
+        from langchain.vectorstores import Pinecone
         vector_store = Pinecone.from_texts(processed_chunks, embeddings, index_name=index_name)
         pinecone_retriever = vector_store.as_retriever(search_kwargs={"k": 2})
 
