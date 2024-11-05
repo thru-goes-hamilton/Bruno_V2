@@ -1,10 +1,10 @@
 # Bruno_V2: A RAG application to chat with PDFs
 
-Bruno is an AI application that can leverage the power of **Retrieval Augmented Generation** to let the user **Chat with a PDF** built using `langchain` and `langgraph`. It uses **Contextual Retrieval** suggested by Anthropic to answer the questions with the most suitable context. [Reference for Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval). <br><br>
+Bruno is a **Retrieval Augmented Generation** application to let users **Chat with a PDF** built using `langchain` and `langgraph`. It uses **Contextual Retrieval** suggested by Anthropic to answer the questions with the most suitable context. [Reference](https://www.anthropic.com/news/contextual-retrieval). <br>
 <br><br>**Every time you run out of Claude or Chatgpt file upload feature, you know what to use now!** [Visit Bruno](https://bruno-v2.web.app/)<br><br>
 
 <p>
-  <img src="https://github.com/user-attachments/assets/1c6a9b6d-ebaa-4a8c-b7e4-c8bcef27002a" width="1000" height="500" /> 
+  <img src="https://github.com/user-attachments/assets/1c6a9b6d-ebaa-4a8c-b7e4-c8bcef27002a" width="850" height="500" /> 
 </p>
 
 
@@ -49,6 +49,8 @@ A variant of Retrieval Augmented Generation that focuses on adding more context 
      '''
      ```
    - Use the new chunks for TF-IDF encoding and embeddings<br>
+
+<img src="https://github.com/user-attachments/assets/f7b4bfed-8dd2-4195-8962-a9abe2010ddd" width="750" height="375" /><br>
 
 
 ## Working of Contextual Retrieval RAG in Bruno
