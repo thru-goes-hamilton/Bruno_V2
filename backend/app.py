@@ -71,16 +71,17 @@ class ChatRequest(BaseModel):
     use_rag: bool = True
 
 
-@app.post("/extract-and-vectorize")
-async def extract_and_vectorize_route():
+@app.post("/extract-and-vectorize/{session_id}")
+async def extract_and_vectorize_route(session_id:str):
     try:
         global global_langgraph_app, global_retriever
         
         # Your existing extraction and vectorization code...
         UPLOAD_FOLDER = Path("uploaded_files")
+        session_folder = UPLOAD_FOLDER / session_id
         all_text = ""
 
-        for file_path in UPLOAD_FOLDER.glob("*"):
+        for file_path in session_folder.glob("*"):
             if file_path.suffix == ".pdf":
                 loader = PyPDFLoader(str(file_path))
             elif file_path.suffix in [".doc", ".docx"]:
@@ -92,6 +93,7 @@ async def extract_and_vectorize_route():
 
             documents = loader.load()
             all_text += " ".join([doc.page_content for doc in documents])
+        print("loaded docs")
 
         # Split text and process chunks...
         from langchain.text_splitter import RecursiveCharacterTextSplitter
