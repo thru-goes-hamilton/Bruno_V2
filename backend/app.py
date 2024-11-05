@@ -420,15 +420,16 @@ async def delete_file(session_id: str, filename: str):
 @app.delete("/delete-session/{session_id}")
 async def delete_session_folder(session_id: str):
     try:
-        # Check if the upload folder exists
-        if UPLOAD_FOLDER.exists() and UPLOAD_FOLDER.is_dir():
-            # Delete everything inside the upload folder
-            shutil.rmtree(UPLOAD_FOLDER)
-            # Optionally recreate the upload folder after deletion
-            UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-            return JSONResponse(content={"message": "All files in the upload folder deleted successfully"}, status_code=200)
+        # Define the path to the session folder
+        session_folder = UPLOAD_FOLDER / session_id
+        
+        # Check if the session folder exists
+        if session_folder.exists() and session_folder.is_dir():
+            # Delete the entire session folder
+            shutil.rmtree(session_folder)
+            return JSONResponse(content={"message": f"Session folder '{session_id}' deleted successfully"}, status_code=200)
         else:
-            raise HTTPException(status_code=404, detail="Upload folder not found")
+            raise HTTPException(status_code=404, detail=f"Session folder '{session_id}' not found")
     
     except Exception as e:
         return JSONResponse(content={"message": f"An error occurred: {str(e)}"}, status_code=500)
