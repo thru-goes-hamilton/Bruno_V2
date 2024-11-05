@@ -82,6 +82,7 @@ async def extract_and_vectorize_route(session_id:str):
         all_text = ""
 
         for file_path in session_folder.glob("*"):
+            print(file_path)
             if file_path.suffix == ".pdf":
                 loader = PyPDFLoader(str(file_path))
             elif file_path.suffix in [".doc", ".docx"]:
@@ -99,7 +100,7 @@ async def extract_and_vectorize_route(session_id:str):
         from langchain.text_splitter import RecursiveCharacterTextSplitter
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = text_splitter.split_text(all_text)
-        
+        print(f"chunking done: {chunks[0]}")
         # Your existing chunk processing code...
         prompt_template = PromptTemplate(
             input_variables=["WHOLE_DOCUMENT", "CHUNK_CONTENT"],
@@ -134,7 +135,7 @@ async def extract_and_vectorize_route(session_id:str):
         global_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, pinecone_retriever], weights=[0.5, 0.5]
         )
-
+        print("retriever setup")
         # Setup prompts and chains...
 
         ### Contextualize question ###
@@ -191,7 +192,7 @@ async def extract_and_vectorize_route(session_id:str):
         rag_question_answer_chain = create_stuff_documents_chain(llm, rag_qa_prompt)
         rag_chain = create_retrieval_chain(history_aware_retriever, rag_question_answer_chain)
         direct_chain = direct_qa_prompt | llm
-
+        print("chain setup")
         # Your State class and call_model function
         class State(TypedDict):
             input: str
@@ -244,11 +245,13 @@ async def extract_and_vectorize_route(session_id:str):
         memory = MemorySaver()
         global_langgraph_app = workflow.compile(checkpointer=memory)
 
+        print("langgraph setup")
         return JSONResponse(
             content={"message": "Extraction and vectorization completed successfully"},
             status_code=200
         )
     except Exception as e:
+        print(f"Error is :{e}")
         raise HTTPException(
             status_code=500,
             detail=f"An error occurred during extraction and vectorization: {str(e)}"
