@@ -120,8 +120,16 @@ async def extract_and_vectorize_route(session_id:str):
                 WHOLE_DOCUMENT=all_text,
                 CHUNK_CONTENT=chunk
             )
-            response = llm.invoke(prompt)
-            processed_chunks.append(response.content)
+            try:
+                # Send to LLM if within token limit
+                response = llm.invoke(prompt)
+                processed_chunks.append(response.content)
+            except Exception as e:
+                print(f"Error processing chunk: {e}")
+                processed_chunks=[]
+                processed_chunks=chunks
+                break
+        
 
         # Create retrievers...
         bm25_retriever = BM25Retriever.from_texts(processed_chunks)
