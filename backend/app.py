@@ -251,6 +251,7 @@ async def extract_and_vectorize_route(session_id:str):
         workflow.add_node("model", call_model)
 
         memory = MemorySaver()
+        global global_langgraph_app
         global_langgraph_app = workflow.compile(checkpointer=memory)
 
         print("langgraph setup")
@@ -266,7 +267,7 @@ async def extract_and_vectorize_route(session_id:str):
         )
 
 async def generate_stream(request: ChatRequest, session_id: str):
-
+    global global_langgraph_app,global_retriever
     """Generator function for streaming responses"""
     if global_langgraph_app is None:
         raise HTTPException(
