@@ -200,6 +200,8 @@ async def extract_and_vectorize_route(session_id:str):
         rag_question_answer_chain = create_stuff_documents_chain(llm, rag_qa_prompt)
         rag_chain = create_retrieval_chain(history_aware_retriever, rag_question_answer_chain)
         direct_chain = direct_qa_prompt | llm
+
+        
         print("chain setup")
         # Your State class and call_model function
         class State(TypedDict):
@@ -284,6 +286,21 @@ async def generate_stream(request: ChatRequest, session_id: str):
         use_rag  = False
 
     if not use_rag:
+                ### Contextualize question ###
+        contextualize_q_system_prompt = (
+            "Given a chat history and the latest user question "
+            "which might reference context in the chat history, "
+            "formulate a standalone question which can be understood "
+            "without the chat history. Do NOT answer the question, "
+            "just reformulate it if needed and otherwise return it as is."
+        )
+        contextualize_q_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", contextualize_q_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
         direct_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
             "Answer the question based on your general knowledge while maintaining a helpful and informative tone. "
@@ -296,8 +313,8 @@ async def generate_stream(request: ChatRequest, session_id: str):
                 ("human", "{input}"),
             ]
         )
-
-        direct_chain = direct_qa_prompt | llm
+        history_chain = create_stuff_documents_chain(llm, contextualize_q_prompt)
+        direct_chain = history_chain | direct_qa_prompt | llm
 
         class State(TypedDict):
             input: str
