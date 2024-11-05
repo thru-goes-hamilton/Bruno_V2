@@ -233,9 +233,16 @@ async def extract_and_vectorize_route(session_id:str):
                     "input": state["input"],
                     "chat_history": state["chat_history"]
                 }):
-                    message_chunk = AIMessageChunk(content=chunk.content)
-                    yield {"messages": [message_chunk]}
-                    accumulated_state["answer"] += chunk.content
+                    if "answer" in chunk:
+                        print("answer it is")
+                        message_chunk = AIMessageChunk(content=chunk["answer"])
+                        yield {"messages": [message_chunk]}
+                        accumulated_state["answer"] += chunk["answer"]
+                    else:
+                        print("content is is")
+                        message_chunk = AIMessageChunk(content=chunk.content)
+                        yield {"messages": [message_chunk]}
+                        accumulated_state["answer"] += chunk.content
                     
             yield {
                 "chat_history": [
@@ -269,21 +276,23 @@ async def extract_and_vectorize_route(session_id:str):
         )
 
 async def generate_stream(request: ChatRequest, session_id: str):
-    global global_langgraph_app,global_retriever
+    global global_langgraph_app, global_retriever
     """Generator function for streaming responses"""
-    if global_langgraph_app is None:
-        raise HTTPException(
-            status_code=500,
-            detail="LangGraph app not initialized. Please run extraction first."
-        )      
-
-
     if any(UPLOAD_FOLDER.glob("*")):
         # Check if session-specific folder has files
         session_folder = UPLOAD_FOLDER / session_id
         use_rag = any(session_folder.glob("*"))   # True if folder is not empty, False if empty
     else:
         use_rag  = False
+
+    if (global_langgraph_app is None) and (use_rag):
+        raise HTTPException(
+            status_code=500,
+            detail="LangGraph app not initialized. Please run extraction first."
+        )      
+
+
+    
 
     if not use_rag:
         direct_system_prompt = (
@@ -320,9 +329,16 @@ async def generate_stream(request: ChatRequest, session_id: str):
                 "input": state["input"],
                 "chat_history": state["chat_history"]
             }):
-                message_chunk = AIMessageChunk(content=chunk.content)
-                yield {"messages": [message_chunk]}
-                accumulated_state["answer"] += chunk.content
+                if "answer" in chunk:
+                    print("answer it is")
+                    message_chunk = AIMessageChunk(content=chunk["answer"])
+                    yield {"messages": [message_chunk]}
+                    accumulated_state["answer"] += chunk["answer"]
+                else:
+                    print("content is is")
+                    message_chunk = AIMessageChunk(content=chunk.content)
+                    yield {"messages": [message_chunk]}
+                    accumulated_state["answer"] += chunk.content
                         
             yield {
                 "chat_history": [
