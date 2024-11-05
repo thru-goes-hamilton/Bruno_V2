@@ -24,6 +24,7 @@ class ChatHandler {
 
   Future<void> sendQuery(
       String prompt, Function setState, BuildContext context) async {
+    print("entered second send query, prompt:$prompt");
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a prompt')),
@@ -58,10 +59,10 @@ class ChatHandler {
       // Prepare the request body
       final requestBody = {
         'message': prompt,
-        'chat_history': chatHistory,
+        'chat_history': [],
         'use_rag': true // You can make this configurable if needed
       };
-
+      print("ready to send result");
       // Create the request
       final request = http.Request(
         'POST',
@@ -129,6 +130,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
   late final ChatHandler chatHandler;
   bool isUploading = false;
+  bool isExtracting = false;
   bool isDeleting = false;
   String? fileName;
   String? fileType;
@@ -184,6 +186,9 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
         var response = await request.send();
 
         if (response.statusCode == 200) {
+          print("Atmepting to extract");
+          await extractAndVectorize();
+
           ScaffoldMessenger.of(context as BuildContext).showSnackBar(
             SnackBar(content: Text('File uploaded successfully')),
           );
@@ -214,6 +219,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
       );
 
       if (response.statusCode == 200) {
+        truncateDatabase();
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           SnackBar(content: Text('File deleted successfully')),
         );
@@ -232,26 +238,33 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   }
 
   Future<void> extractAndVectorize() async {
+    setState(() {
+      isExtracting = true;
+    });
+    print("inside extract");
     try {
       var response = await http.post(
-        Uri.parse('https://bruno-v2.onrender.com/extract-and-vectorize'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        Uri.parse(
+            'https://bruno-v2.onrender.com/extract-and-vectorize/${chatHandler.sessionId}'),
       );
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
-        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          SnackBar(content: Text(jsonResponse['message'])),
-        );
+        // ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+        //   SnackBar(content: Text(jsonResponse['message'])),
+        // );
+        print(jsonResponse['message']);
       } else {
         throw Exception('Failed to extract and vectorize: ${response.body}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      // ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      //   SnackBar(content: Text('Error: $e')),
+      // );
+    } finally {
+      setState(() {
+        isExtracting = false;
+      });
     }
   }
 
@@ -300,11 +313,12 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> sendQuery() async {
+  Future<void> sendQuery(BuildContext context) async {
+    print("entered send query");
     await chatHandler.sendQuery(
       _controller.text.trim(),
       setState,
-      context as BuildContext,
+      context,
     );
     _controller.clear();
   }
@@ -315,23 +329,14 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     chatHandler = ChatHandler(sessionId: generateSessionId());
     print('Generated Session ID: $sessionId');
-    deleteAllFiles();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    deleteAllFiles();
+    truncateDatabase();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached) {
-      // This is called when the app is being closed
-      deleteAllFiles();
-      truncateDatabase();
-    }
-    super.didChangeAppLifecycleState(state);
   }
 
   @override
@@ -375,7 +380,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                   children: [
                     Expanded(
                       child: DynamicChatList(
-                        messages: messages,
+                        messages: chatHandler.messages,
                         isLoading: isLoading,
                       ),
                     ),
@@ -485,12 +490,12 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                                         )
                                       : Iconify(Ic.round_attach_file,
                                           size: 20, color: kWhitePurple),
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (!isUploading) {
                                       // Call uploadFile and another function here
-                                      uploadFile();
-                                      extractAndVectorize();
+                                      await uploadFile();
                                     }
+                                    // await extractAndVectorize();
                                   },
                                   padding: EdgeInsets.zero,
                                 ),
@@ -507,7 +512,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                                   icon: Iconify(Carbon.send_filled,
                                       size: 20, color: kWhitePurple),
                                   onPressed: () async {
-                                      await sendQuery();                                    
+                                    await sendQuery(context);
                                   },
                                 ),
                               ),
