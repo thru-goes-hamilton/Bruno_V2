@@ -233,25 +233,10 @@ async def extract_and_vectorize_route(session_id:str):
                     "input": state["input"],
                     "chat_history": state["chat_history"]
                 }):
-                    if "answer" in chunk:
-                        print("answer it is")
-                        message_chunk = AIMessageChunk(content=chunk["answer"])
-                        yield {"messages": [message_chunk]}
-                        accumulated_state["answer"] += chunk["answer"]
-                    else:
-                        print("content is is")
-                        message_chunk = AIMessageChunk(content=chunk.content)
-                        yield {"messages": [message_chunk]}
-                        accumulated_state["answer"] += chunk.content
+                    print("content is is")
+                    message_chunk = AIMessageChunk(content=chunk.content)
+                    yield {"messages": [message_chunk]}
                     
-            yield {
-                "chat_history": [
-                    HumanMessage(state["input"]),
-                    AIMessage(accumulated_state["answer"]),
-                ],
-                "context": accumulated_state["context"],
-                "answer": accumulated_state["answer"]
-            }
 
 
         # Create and store LangGraph app
@@ -297,7 +282,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
     if not use_rag:
         direct_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
-            "Answer the question based on your general knowledge while maintaining a helpful and informative tone. "
+            "Answer only the question based on your general knowledge while maintaining a helpful and informative tone. "
         )
 
         direct_qa_prompt = ChatPromptTemplate.from_messages(
@@ -329,25 +314,9 @@ async def generate_stream(request: ChatRequest, session_id: str):
                 "input": state["input"],
                 "chat_history": state["chat_history"]
             }):
-                if "answer" in chunk:
-                    print("answer it is")
-                    message_chunk = AIMessageChunk(content=chunk["answer"])
-                    yield {"messages": [message_chunk]}
-                    accumulated_state["answer"] += chunk["answer"]
-                else:
-                    print("content is is")
-                    message_chunk = AIMessageChunk(content=chunk.content)
-                    yield {"messages": [message_chunk]}
-                    accumulated_state["answer"] += chunk.content
-                        
-            yield {
-                "chat_history": [
-                    HumanMessage(state["input"]),
-                    AIMessage(accumulated_state["answer"]),
-                ],
-                "context": accumulated_state["context"],
-                "answer": accumulated_state["answer"]
-            }
+                print("content is is")
+                message_chunk = AIMessageChunk(content=chunk.content)
+                yield {"messages": [message_chunk]}
 
         # Create and store LangGraph app
         workflow = StateGraph(state_schema=State)
