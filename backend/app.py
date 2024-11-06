@@ -230,7 +230,7 @@ async def extract_and_vectorize_route(session_id:str):
                 "chat_history": state["chat_history"]
             }):
                 if "answer" in chunk:
-                    # accumulated_answer += chunk["answer"]
+                    accumulated_answer += chunk["answer"]
                     message_chunk = AIMessageChunk(content=chunk["answer"])
                     yield {"messages": [message_chunk]}
 
