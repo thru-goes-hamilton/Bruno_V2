@@ -213,29 +213,21 @@ async def extract_and_vectorize_route(session_id:str):
 
 
         async def call_model(state: State):
-            accumulated_state = {
-                "chat_history": [],
-                "context": "",
-                "answer": ""
-            }
-            
-            if state["use_rag"]:    
-                async for chunk in rag_chain.astream(state):
-                    if "answer" in chunk:
-                        message_chunk = AIMessageChunk(content=chunk["answer"])
-                        yield {"messages": [message_chunk]}
-                        accumulated_state["answer"] += chunk["answer"]
-                        
-                    if "context" in chunk:
-                        accumulated_state["context"] = chunk["context"]
-            else:
-                async for chunk in direct_chain.astream({
-                    "input": state["input"],
-                    "chat_history": state["chat_history"]
-                }):
-                    print("content is is")
-                    message_chunk = AIMessageChunk(content=chunk.content)
+            # accumulated_state = {
+            #     "chat_history": [],
+            #     "context": "",
+            #     "answer": ""
+            # }  
+            async for chunk in rag_chain.astream(state):
+                if "answer" in chunk:
+                    message_chunk = AIMessageChunk(content=chunk["answer"])
                     yield {"messages": [message_chunk]}
+                    # accumulated_state["answer"] += chunk["answer"]
+                        
+                # if "context" in chunk:
+                    # accumulated_state["context"] = chunk["context"]
+
+                
                     
 
 
@@ -279,7 +271,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
 
     
 
-    if not use_rag:
+    if (global_langgraph_app is None) and (not use_rag):
         direct_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
             "Answer only the question based on your general knowledge while maintaining a helpful and informative tone. "
@@ -302,13 +294,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
             use_rag: bool
 
 
-        async def call_model(state: State):
-            accumulated_state = {
-                "chat_history": [],
-                "context": "",
-                "answer": ""
-            }
-                
+        async def call_model(state: State):                
             
             async for chunk in direct_chain.astream({
                 "input": state["input"],
@@ -325,6 +311,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
 
         memory = MemorySaver()
         global_langgraph_app = workflow.compile(checkpointer=memory)
+
     
 
     config = {"configurable": {"thread_id": session_id}}
