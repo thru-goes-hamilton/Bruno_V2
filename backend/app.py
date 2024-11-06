@@ -232,20 +232,27 @@ async def extract_and_vectorize_route(session_id:str):
             async for chunk in rag_chain.astream(state):
                 if "answer" in chunk:
                     message_chunk = AIMessageChunk(content=chunk["answer"])
-                    # Only yield the message chunk, not the full state
-                    yield {"messages": [message_chunk]}
                     accumulated_state["answer"] += chunk["answer"]
+                    # Yield both the message chunk and a valid state update
+                    yield {
+                        "messages": [message_chunk],
+                        "answer": accumulated_state["answer"]  # Include valid state update
+                    }
                 if "context" in chunk:
                     accumulated_state["context"] = chunk["context"]
+                    yield {"context": chunk["context"]}  # Valid state update for context
 
-            # Instead of yielding a final state update, just update the state internally
-            state["chat_history"] = [
+            # Final state update
+            final_messages = [
                 HumanMessage(state["input"]),
                 AIMessage(accumulated_state["answer"]),
             ]
-            state["answer"] = accumulated_state["answer"]
-            state["context"] = accumulated_state["context"]     
-                            
+            
+            yield {
+                "chat_history": final_messages,
+                "answer": accumulated_state["answer"],
+                "context": accumulated_state["context"]
+            }              
 
 
         # Create and store LangGraph app
