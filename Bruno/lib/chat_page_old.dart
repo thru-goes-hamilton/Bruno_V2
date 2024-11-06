@@ -12,7 +12,7 @@ import 'package:path/path.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'dart:html' as html;
 import 'constants.dart';
 
 class ChatHandler {
@@ -268,6 +268,22 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     }
   }
 
+  void truncateDatabaseWithBeacon() {
+    // Define the endpoint URL
+    const url = 'https://bruno-v2.onrender.com/truncate';
+
+    // Send a beacon request to the server to truncate the database
+    html.window.navigator.sendBeacon(url, null);
+  }
+
+  void deleteAllFilesWithBeacon(String sessionId) {
+    // Define the endpoint URL with the sessionId
+    final url = 'https://bruno-v2.onrender.com/delete-session/$sessionId';
+
+    // Send a beacon request to delete all files for the given session
+    html.window.navigator.sendBeacon(url, null);
+  }
+
   Future<void> truncateDatabase() async {
     try {
       // Send the HTTP POST request to the truncate endpoint
@@ -328,14 +344,21 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     chatHandler = ChatHandler(sessionId: generateSessionId());
-    print('Generated Session ID: $sessionId');
+    print('Generated Session ID: $chatHandler.sessionId');
+    html.window.onBeforeUnload.listen((event) {
+      if (event is html.BeforeUnloadEvent) {
+        truncateDatabaseWithBeacon();
+        deleteAllFilesWithBeacon(chatHandler.sessionId);
+        print("about to exit");
+        event.returnValue = 'Some return value here';
+      }
+    });
+    
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    deleteAllFiles();
-    truncateDatabase();
     super.dispose();
   }
 
