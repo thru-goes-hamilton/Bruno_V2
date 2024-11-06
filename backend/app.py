@@ -228,28 +228,24 @@ async def extract_and_vectorize_route(session_id:str):
                 "context": "",
                 "answer": ""
             }
-    
 
             async for chunk in rag_chain.astream(state):
                 if "answer" in chunk:
-                    
                     message_chunk = AIMessageChunk(content=chunk["answer"])
+                    # Only yield the message chunk, not the full state
                     yield {"messages": [message_chunk]}
                     accumulated_state["answer"] += chunk["answer"]
                 if "context" in chunk:
-                    # Accumulate context
                     accumulated_state["context"] = chunk["context"]
 
-            yield {
-                "chat_history": [
-                    HumanMessage(state["input"]),
-                    AIMessage(accumulated_state["answer"]),
-                ],
-                "answer": accumulated_state["answer"],
-                "context": accumulated_state["context"]
-            }
-                
-                    
+            # Instead of yielding a final state update, just update the state internally
+            state["chat_history"] = [
+                HumanMessage(state["input"]),
+                AIMessage(accumulated_state["answer"]),
+            ]
+            state["answer"] = accumulated_state["answer"]
+            state["context"] = accumulated_state["context"]     
+                            
 
 
         # Create and store LangGraph app
@@ -288,9 +284,6 @@ async def generate_stream(request: ChatRequest, session_id: str):
             status_code=500,
             detail="LangGraph app not initialized. Please run extraction first."
         )      
-
-
-    
 
     if (global_langgraph_app is None) and (not use_rag):
         direct_system_prompt = (
@@ -358,8 +351,6 @@ async def generate_stream(request: ChatRequest, session_id: str):
         memory = MemorySaver()
         global_langgraph_app = workflow.compile(checkpointer=memory)
 
-    
-
     formatted_history = [
         HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"])
         for msg in request.chat_history
@@ -376,13 +367,13 @@ async def generate_stream(request: ChatRequest, session_id: str):
         stream_mode="messages",
         config=config
     ):
-        if isinstance(msg, dict) and "chat_history" in msg:
-            # This is a state update, don't yield it to the client
+        # Only process message chunks, ignore state updates
+        if isinstance(msg, dict):
+            if "messages" in msg and msg["messages"]:
+                chunk = msg["messages"][0]
+                if chunk.content:
+                    yield f"data: {json.dumps({'content': chunk.content})}\n\n"
             continue
-            
-        if msg.content and not isinstance(msg, HumanMessage):
-            # Yield each chunk as a Server-Sent Event
-            yield f"data: {json.dumps({'content': msg.content})}\n\n"
 
     # Send end marker
     yield f"data: {json.dumps({'content': '[DONE]'})}\n\n"
