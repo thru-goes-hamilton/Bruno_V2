@@ -70,7 +70,6 @@ class ChatRequest(BaseModel):
     chat_history: List[Dict[str, str]] = []
     use_rag: bool = True
 
-
 @app.post("/extract-and-vectorize/{session_id}")
 async def extract_and_vectorize_route(session_id:str):
     try:
@@ -292,10 +291,22 @@ async def generate_stream(request: ChatRequest, session_id: str):
             context: str
             answer: str
             use_rag: bool
+            
+            @classmethod
+            def initialize(cls):
+                return cls(
+                    input="",
+                    chat_history=[],
+                    context="",
+                    answer="",
+                    use_rag=False
+                )
 
 
         async def call_model(state: State):                
-            
+            current_chat_history = list(state.get("chat_history", []))
+            accumulated_answer = ""
+
             async for chunk in direct_chain.astream({
                 "input": state["input"],
                 "chat_history": state["chat_history"]
@@ -304,25 +315,36 @@ async def generate_stream(request: ChatRequest, session_id: str):
                 message_chunk = AIMessageChunk(content=chunk.content)
                 yield {"messages": [message_chunk]}
 
+            # Update chat history after completion
+            current_chat_history.extend([
+                HumanMessage(content=state["input"]),
+                AIMessage(content=accumulated_answer)
+            ])
+            
+            # Return final state update
+            yield {
+                "chat_history": current_chat_history,
+                "answer": accumulated_answer,
+                "context": state.get("context", "")
+            }
+
         # Create and store LangGraph app
         workflow = StateGraph(state_schema=State)
         workflow.add_edge(START, "model")
         workflow.add_node("model", call_model)
+        workflow.set_entry_point("model")
 
         memory = MemorySaver()
         global_langgraph_app = workflow.compile(checkpointer=memory)
 
     
 
-    config = {"configurable": {"thread_id": session_id}}
-    first = True
-    gathered = None
-
-    # Convert chat history to the correct format
     formatted_history = [
         HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"])
         for msg in request.chat_history
     ]
+
+    config = {"configurable": {"thread_id": session_id}}
 
     async for msg, metadata in global_langgraph_app.astream(
         {
@@ -333,16 +355,13 @@ async def generate_stream(request: ChatRequest, session_id: str):
         stream_mode="messages",
         config=config
     ):
+        if isinstance(msg, dict) and "chat_history" in msg:
+            # This is a state update, don't yield it to the client
+            continue
+            
         if msg.content and not isinstance(msg, HumanMessage):
             # Yield each chunk as a Server-Sent Event
             yield f"data: {json.dumps({'content': msg.content})}\n\n"
-
-        if isinstance(msg, AIMessageChunk):
-            if first:
-                gathered = msg
-                first = False
-            else:
-                gathered = gathered + msg
 
     # Send end marker
     yield f"data: {json.dumps({'content': '[DONE]'})}\n\n"
@@ -408,7 +427,6 @@ async def delete_session_folder(session_id: str):
     except Exception as e:
         return JSONResponse(content={"message": f"An error occurred: {str(e)}"}, status_code=500)
     
-
 @app.post("/truncate")
 async def truncate_database():
     try:
