@@ -209,23 +209,38 @@ async def extract_and_vectorize_route(session_id:str):
             context: str
             answer: str
             use_rag: bool
+            @classmethod
+            def initialize(cls):
+                return cls(
+                    input="",
+                    chat_history=[],
+                    context="",
+                    answer="",
+                    use_rag=False
+                )
 
 
         async def call_model(state: State):
-            # accumulated_state = {
-            #     "chat_history": [],
-            #     "context": "",
-            #     "answer": ""
-            # }  
+            current_chat_history = list(state.get("chat_history", []))
+            accumulated_answer = ""
+
             async for chunk in rag_chain.astream(state):
                 if "answer" in chunk:
+                    accumulated_answer += chunk["answer"]
                     message_chunk = AIMessageChunk(content=chunk["answer"])
                     yield {"messages": [message_chunk]}
-                    # accumulated_state["answer"] += chunk["answer"]
-                        
-                # if "context" in chunk:
-                    # accumulated_state["context"] = chunk["context"]
 
+            # Update chat history after completion
+            current_chat_history.extend([
+                HumanMessage(content=state["input"]),
+                AIMessage(content=accumulated_answer)
+            ])
+
+            yield {
+                "chat_history": current_chat_history,
+                "answer": accumulated_answer,
+                "context": state.get("context", "")
+            }
                 
                     
 
@@ -234,6 +249,7 @@ async def extract_and_vectorize_route(session_id:str):
         workflow = StateGraph(state_schema=State)
         workflow.add_edge(START, "model")
         workflow.add_node("model", call_model)
+        workflow.set_entry_point("model")
 
         memory = MemorySaver()
         global global_langgraph_app
