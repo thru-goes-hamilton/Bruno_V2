@@ -222,28 +222,31 @@ async def extract_and_vectorize_route(session_id:str):
 
 
         async def call_model(state: State):
-            current_chat_history = list(state.get("chat_history", []))
-            accumulated_answer = ""
+            # Initialize empty accumulated state
+            accumulated_state = {
+                "chat_history": [],
+                "context": "",
+                "answer": ""
+            }
+    
 
-            async for chunk in rag_chain.astream({
-                "input": state["input"],
-                "chat_history": state["chat_history"]
-            }):
+            async for chunk in rag_chain.astream(state):
                 if "answer" in chunk:
-                    accumulated_answer += chunk["answer"]
+                    
                     message_chunk = AIMessageChunk(content=chunk["answer"])
                     yield {"messages": [message_chunk]}
-
-            # Update chat history after completion
-            current_chat_history.extend([
-                HumanMessage(content=state["input"]),
-                AIMessage(content=accumulated_answer)
-            ])
+                    accumulated_state["answer"] += chunk["answer"]
+                if "context" in chunk:
+                    # Accumulate context
+                    accumulated_state["context"] = chunk["context"]
 
             yield {
-                "chat_history": current_chat_history,
-                "answer": accumulated_answer,
-                "context": state.get("context", "")
+                "chat_history": [
+                    HumanMessage(state["input"]),
+                    AIMessage(accumulated_state["answer"]),
+                ],
+                "answer": accumulated_state["answer"],
+                "context": accumulated_state["context"]
             }
                 
                     
@@ -253,7 +256,6 @@ async def extract_and_vectorize_route(session_id:str):
         workflow = StateGraph(state_schema=State)
         workflow.add_edge(START, "model")
         workflow.add_node("model", call_model)
-        workflow.set_entry_point("model")
 
         memory = MemorySaver()
         global global_langgraph_app
