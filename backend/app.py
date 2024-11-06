@@ -209,6 +209,7 @@ async def extract_and_vectorize_route(session_id:str):
             context: str
             answer: str
             use_rag: bool
+
             @classmethod
             def initialize(cls):
                 return cls(
@@ -224,9 +225,12 @@ async def extract_and_vectorize_route(session_id:str):
             current_chat_history = list(state.get("chat_history", []))
             accumulated_answer = ""
 
-            async for chunk in rag_chain.astream(state):
+            async for chunk in rag_chain.astream({
+                "input": state["input"],
+                "chat_history": state["chat_history"]
+            }):
                 if "answer" in chunk:
-                    accumulated_answer += chunk["answer"]
+                    # accumulated_answer += chunk["answer"]
                     message_chunk = AIMessageChunk(content=chunk["answer"])
                     yield {"messages": [message_chunk]}
 
@@ -326,8 +330,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
             async for chunk in direct_chain.astream({
                 "input": state["input"],
                 "chat_history": state["chat_history"]
-            }):
-                print("content is is")
+            }): 
                 message_chunk = AIMessageChunk(content=chunk.content)
                 yield {"messages": [message_chunk]}
 
