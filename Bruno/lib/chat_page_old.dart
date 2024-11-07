@@ -284,6 +284,14 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     html.window.navigator.sendBeacon(url, null);
   }
 
+  void clearStateWithBeacon(String sessionId) {
+    // Define the endpoint URL with the sessionId
+    final url = 'https://bruno-v2.onrender.com/cleanup/$sessionId';
+
+    // Send a beacon request to delete all files for the given session
+    html.window.navigator.sendBeacon(url, null);
+  }
+
   Future<void> truncateDatabase() async {
     try {
       // Send the HTTP POST request to the truncate endpoint
@@ -349,6 +357,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
       if (event is html.BeforeUnloadEvent) {
         truncateDatabaseWithBeacon();
         deleteAllFilesWithBeacon(chatHandler.sessionId);
+        clearStateWithBeacon(chatHandler.sessionId);
         print("about to exit");
         event.returnValue = 'Some return value here';
       }
