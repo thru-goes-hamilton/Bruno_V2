@@ -53,6 +53,7 @@ class AppState:
 # Initialize state
 app.state.app_state = AppState()
 
+
 UPLOAD_FOLDER = Path("uploaded_files")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
@@ -293,7 +294,16 @@ async def generate_stream(request: ChatRequest, session_id: str):
         use_rag  = False
 
         # Get session-specific langgraph app from state
-    global_langgraph_app = app.state.app_state.langgraph_apps.get(session_id)
+    
+    try:
+        global_langgraph_app = app.state.app_state.langgraph_apps.get(session_id)
+    except Exception as e:
+        # Set the app state to None in case of an exception
+        app.state.app_state.langgraph_apps[session_id] = None
+        global_langgraph_app = app.state.app_state.langgraph_apps.get(session_id)
+        # Optionally, log the error if needed
+        print(f"Initializing langgraph_apps for no rag usecase with session_id {session_id}: {e}")
+
 
     if (global_langgraph_app is None) and (use_rag):
         raise HTTPException(
