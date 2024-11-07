@@ -44,6 +44,15 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Add state management class
+class AppState:
+    def __init__(self):
+        self.langgraph_apps: Dict[str, StateGraph] = {}
+        self.retrievers: Dict[str, EnsembleRetriever] = {}
+
+# Initialize state
+app.state.app_state = AppState()
+
 UPLOAD_FOLDER = Path("uploaded_files")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
@@ -61,10 +70,6 @@ cloud = 'aws'
 region = pinecone_environment
 spec = ServerlessSpec(cloud=cloud, region=region)
 
-# Global variable to store the LangGraph app
-global_langgraph_app = None
-global_retriever = None
-
 class ChatRequest(BaseModel):
     message: str
     chat_history: List[Dict[str, str]] = []
@@ -73,7 +78,6 @@ class ChatRequest(BaseModel):
 @app.post("/extract-and-vectorize/{session_id}")
 async def extract_and_vectorize_route(session_id:str):
     try:
-        global global_langgraph_app, global_retriever
         
         # Your existing extraction and vectorization code...
         UPLOAD_FOLDER = Path("uploaded_files")
@@ -261,8 +265,10 @@ async def extract_and_vectorize_route(session_id:str):
         workflow.add_node("model", call_model)
 
         memory = MemorySaver()
-        global global_langgraph_app
         global_langgraph_app = workflow.compile(checkpointer=memory)
+
+        app.state.app_state.retrievers[session_id] = global_retriever
+        app.state.app_state.langgraph_apps[session_id] = global_langgraph_app
 
         print("langgraph setup")
         return JSONResponse(
@@ -285,6 +291,9 @@ async def generate_stream(request: ChatRequest, session_id: str):
         use_rag = any(session_folder.glob("*"))   # True if folder is not empty, False if empty
     else:
         use_rag  = False
+
+        # Get session-specific langgraph app from state
+    global_langgraph_app = app.state.app_state.langgraph_apps.get(session_id)
 
     if (global_langgraph_app is None) and (use_rag):
         raise HTTPException(
@@ -356,7 +365,9 @@ async def generate_stream(request: ChatRequest, session_id: str):
         workflow.set_entry_point("model")
 
         memory = MemorySaver()
-        global_langgraph_app = workflow.compile(checkpointer=memory)
+            # Get session-specific langgraph app from state
+        app.state.app_state.langgraph_apps.get[session_id] = workflow.compile(checkpointer=memory)
+        global_langgraph_app = app.state.app_state.langggraph_apps.get[session_id]
 
     formatted_history = [
         HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"])
@@ -374,13 +385,13 @@ async def generate_stream(request: ChatRequest, session_id: str):
         stream_mode="messages",
         config=config
     ):
-        # Only process message chunks, ignore state updates
-        if isinstance(msg, dict):
-            if "messages" in msg and msg["messages"]:
-                chunk = msg["messages"][0]
-                if chunk.content:
-                    yield f"data: {json.dumps({'content': chunk.content})}\n\n"
+        if isinstance(msg, dict) and "chat_history" in msg:
+            # This is a state update, don't yield it to the client
             continue
+
+        if msg.content and not isinstance(msg, HumanMessage):
+            # Yield each chunk as a Server-Sent Event
+            yield f"data: {json.dumps({'content': msg.content})}\n\n"
 
     # Send end marker
     yield f"data: {json.dumps({'content': '[DONE]'})}\n\n"
@@ -460,6 +471,25 @@ async def truncate_database():
         return JSONResponse(content={"message": message}, status_code=200)
     except Exception as e:
         return JSONResponse(content={"message": f"An error occurred: {str(e)}"}, status_code=500)
+
+# Add cleanup endpoint for session state
+@app.delete("/cleanup/{session_id}")
+async def cleanup_session(session_id: str):
+    try:
+        # Remove session-specific state
+        if session_id in app.state.app_state.langgraph_apps:
+            del app.state.app_state.langgraph_apps[session_id]
+        if session_id in app.state.app_state.retrievers:
+            del app.state.app_state.retrievers[session_id]
+        return JSONResponse(
+            content={"message": f"Session {session_id} state cleaned up successfully"},
+            status_code=200
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred during session cleanup: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
