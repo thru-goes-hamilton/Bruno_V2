@@ -366,8 +366,8 @@ async def generate_stream(request: ChatRequest, session_id: str):
 
         memory = MemorySaver()
             # Get session-specific langgraph app from state
-        app.state.app_state.langgraph_apps.get[session_id] = workflow.compile(checkpointer=memory)
-        global_langgraph_app = app.state.app_state.langggraph_apps.get[session_id]
+        app.state.app_state.langgraph_apps[session_id] = workflow.compile(checkpointer=memory)
+        global_langgraph_app = app.state.app_state.langggraph_apps[session_id]
 
     formatted_history = [
         HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"])
