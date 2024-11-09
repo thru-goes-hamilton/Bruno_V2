@@ -374,191 +374,194 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        color: kDarkPurple,
-        padding: EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Hero(
-                  tag: 'brainIcon',
-                  child: Iconify(FileIcons.brainfuck,
-                      size: 30, color: kLighterWhitePurple),
-                ),
-                SizedBox(width: 20),
-                Hero(
-                  tag: 'brunoText',
-                  child: Text(
-                    'BRUNO',
-                    style: TextStyle(
-                      color: kLighterWhitePurple,
-                      fontSize: 26,
-                      fontFamily: 'Merriweather',
-                    ),
+      body: SelectionArea(
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          color: kDarkPurple,
+          padding: EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Hero(
+                    tag: 'brainIcon',
+                    child: Iconify(FileIcons.brainfuck,
+                        size: 30, color: kLighterWhitePurple),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 18),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 200, vertical: 9),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: DynamicChatList(
-                        messages: chatHandler.messages,
-                        isLoading: isLoading,
+                  SizedBox(width: 20),
+                  Hero(
+                    tag: 'brunoText',
+                    child: Text(
+                      'BRUNO',
+                      style: TextStyle(
+                        color: kLighterWhitePurple,
+                        fontSize: 26,
+                        fontFamily: 'Merriweather',
                       ),
                     ),
-                    fileName != null
-                        ? Row(
-                            children: [
-                              SizedBox(
-                                width: 18,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4.5),
-                                child: Chip(
-                                  backgroundColor: kLightPurple,
-                                  deleteIcon: Icon(
-                                    Icons.close,
-                                    size: 18,
-                                    color: kLighterWhitePurple,
-                                  ),
-                                  onDeleted: () {
-                                    deleteFile(fileName!);
-                                    setState(() {
-                                      fileName = null;
-                                    });
-                                  },
-                                  avatar: Icon(
-                                    Icons.insert_drive_file,
-                                    size: 18,
-                                    color: kLighterWhitePurple,
-                                  ),
-                                  label: Text(
-                                    fileName!.length > 8
-                                        ? fileName!.substring(0, 8) + '...'
-                                        : fileName!,
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontFamily: "MerriweatherSans",
-                                        color: kLighterWhitePurple),
+                  ),
+                ],
+              ),
+              SizedBox(height: 18),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 200, vertical: 9),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: DynamicChatList(
+                          messages: chatHandler.messages,
+                          isLoading: isLoading,
+                        ),
+                      ),
+                      fileName != null
+                          ? Row(
+                              children: [
+                                SizedBox(
+                                  width: 18,
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4.5),
+                                  child: Chip(
+                                    backgroundColor: kLightPurple,
+                                    deleteIcon: Icon(
+                                      Icons.close,
+                                      size: 18,
+                                      color: kLighterWhitePurple,
+                                    ),
+                                    onDeleted: () {
+                                      deleteFile(fileName!);
+                                      setState(() {
+                                        fileName = null;
+                                      });
+                                    },
+                                    avatar: Icon(
+                                      Icons.insert_drive_file,
+                                      size: 18,
+                                      color: kLighterWhitePurple,
+                                    ),
+                                    label: Text(
+                                      fileName!.length > 8
+                                          ? fileName!.substring(0, 8) + '...'
+                                          : fileName!,
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: "MerriweatherSans",
+                                          color: kLighterWhitePurple),
+                                    ),
                                   ),
                                 ),
+                                Expanded(child: SizedBox()),
+                              ],
+                            )
+                          : SizedBox(height: 0),
+                      Stack(
+                        children: [
+                          Container(
+                            constraints: BoxConstraints(
+                              maxHeight:
+                                  150, // Set a maximum height for the text field
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 25),
+                            decoration: BoxDecoration(
+                              color: kWhitePurple,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: TextField(
+                              cursorColor: kDarkPurple,
+                              controller: _controller,
+                              maxLines: null, // Allow multiple lines
+                              keyboardType: TextInputType
+                                  .multiline, // Enable multiline input
+                              textInputAction: TextInputAction
+                                  .newline, // Use newline action for enter key
+                              decoration: InputDecoration(
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 9, vertical: 15),
+                                hintText: "Talk to Bruno...",
+                                hintStyle: TextStyle(
+                                  color: kDarkPurple,
+                                  fontSize: 18,
+                                  fontFamily: 'MerriweatherSans',
+                                ),
+                                border: InputBorder.none,
                               ),
-                              Expanded(child: SizedBox()),
-                            ],
-                          )
-                        : SizedBox(height: 0),
-                    Stack(
-                      children: [
-                        Container(
-                          constraints: BoxConstraints(
-                            maxHeight:
-                                150, // Set a maximum height for the text field
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 25),
-                          decoration: BoxDecoration(
-                            color: kWhitePurple,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: TextField(
-                            controller: _controller,
-                            maxLines: null, // Allow multiple lines
-                            keyboardType: TextInputType
-                                .multiline, // Enable multiline input
-                            textInputAction: TextInputAction
-                                .newline, // Use newline action for enter key
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 15),
-                              hintText: "Talk to Bruno...",
-                              hintStyle: TextStyle(
+                              style: TextStyle(
                                 color: kDarkPurple,
                                 fontSize: 18,
                                 fontFamily: 'MerriweatherSans',
                               ),
-                              border: InputBorder.none,
-                            ),
-                            style: TextStyle(
-                              color: kDarkPurple,
-                              fontSize: 18,
-                              fontFamily: 'MerriweatherSans',
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: kLightPurple,
-                                  borderRadius: BorderRadius.circular(30),
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: kLightPurple,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: IconButton(
+                                    icon: isUploading
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      kWhitePurple),
+                                            ),
+                                          )
+                                        : Iconify(Ic.round_attach_file,
+                                            size: 20, color: kWhitePurple),
+                                    onPressed: () async {
+                                      if (!isUploading) {
+                                        // Call uploadFile and another function here
+                                        await uploadFile();
+                                      }
+                                      // await extractAndVectorize();
+                                    },
+                                    padding: EdgeInsets.zero,
+                                  ),
                                 ),
-                                child: IconButton(
-                                  icon: isUploading
-                                      ? SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    kWhitePurple),
-                                          ),
-                                        )
-                                      : Iconify(Ic.round_attach_file,
-                                          size: 20, color: kWhitePurple),
-                                  onPressed: () async {
-                                    if (!isUploading) {
-                                      // Call uploadFile and another function here
-                                      await uploadFile();
-                                    }
-                                    // await extractAndVectorize();
-                                  },
-                                  padding: EdgeInsets.zero,
+                                SizedBox(width: 4.5),
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: kDarkPurple,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: IconButton(
+                                    icon: Iconify(Carbon.send_filled,
+                                        size: 20, color: kWhitePurple),
+                                    onPressed: () async {
+                                      await sendQuery(context);
+                                    },
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 4.5),
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: kDarkPurple,
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: IconButton(
-                                  icon: Iconify(Carbon.send_filled,
-                                      size: 20, color: kWhitePurple),
-                                  onPressed: () async {
-                                    await sendQuery(context);
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 4.5),
-                            ],
+                                SizedBox(width: 4.5),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

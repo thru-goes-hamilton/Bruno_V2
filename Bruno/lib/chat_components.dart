@@ -95,10 +95,13 @@ class DynamicChatList extends StatelessWidget {
                       ),
                       // Code blocks
                       code: TextStyle(
-                        color: kWhitePurple,
-                        fontSize: 16,
-                        fontFamily: 'monospace',
-                        backgroundColor: Colors.black12,
+                          color: kDarkPurple,
+                          fontSize: 16,
+                          fontFamily: 'MerriweatherSans'),
+                      codeblockPadding: EdgeInsets.all(8.0),
+                      codeblockDecoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(20.0),
                       ),
                     ),
                     shrinkWrap: true, // Helps with fitting content in the Row
@@ -124,55 +127,197 @@ class DynamicChatList extends StatelessWidget {
       child: MarkdownBody(
         data: answer,
         styleSheet: MarkdownStyleSheet(
-          // Base text style
+          // Base text styles
           p: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 18,
-            fontWeight: FontWeight.w300,
-            fontFamily: 'MerriweatherSans',
-          ),
-          // Bold text
-          strong: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'MerriweatherSans',
-          ),
-          // Italic text
-          em: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 18,
-            fontWeight: FontWeight.w300,
-            fontStyle: FontStyle.italic,
-            fontFamily: 'MerriweatherSans',
-          ),
-          // Headers
-          h1: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'MerriweatherSans',
-          ),
-          h2: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'MerriweatherSans',
-          ),
-          h3: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'MerriweatherSans',
-          ),
-          // Code blocks
+              color: kOffWhitePurple,
+              fontSize: 16.0,
+              fontFamily: 'MerriweatherSans'),
+          a: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              decoration: TextDecoration.underline,
+              fontFamily: 'MerriweatherSans'),
           code: TextStyle(
-            color: kLighterWhitePurple,
-            fontSize: 16,
-            fontFamily: 'monospace',
-            backgroundColor: Colors.black26,
+            color: kWhitePurple,
+            fontSize: 16.0,
+            backgroundColor: Colors.black,
+            fontFamily: 'MerriweatherSans',
           ),
+
+          h1: TextStyle(
+              color: kWhitePurple,
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          h2: TextStyle(
+              color: kWhitePurple,
+              fontSize: 22.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          h3: TextStyle(
+              color: kWhitePurple,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          h4: TextStyle(
+              color: kWhitePurple,
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          h5: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          h6: TextStyle(
+              color: kWhitePurple,
+              fontSize: 14.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          em: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              fontStyle: FontStyle.italic,
+              fontFamily: 'MerriweatherSans'),
+          strong: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          del: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              decoration: TextDecoration.lineThrough,
+              fontFamily: 'MerriweatherSans'),
+          blockquote: TextStyle(
+              color: kOffWhitePurple,
+              fontSize: 18.0,
+              fontStyle: FontStyle.italic,
+              fontFamily: 'MerriweatherSans'),
+          img: TextStyle(color: kOffWhitePurple),
+          checkbox: TextStyle(color: kOffWhitePurple, fontSize: 16.0),
+
+          // Spacing and padding
+          blockSpacing: 10.0,
+          pPadding: EdgeInsets.all(8.0),
+          h1Padding: EdgeInsets.symmetric(vertical: 8.0),
+          h2Padding: EdgeInsets.symmetric(vertical: 6.0),
+          h3Padding: EdgeInsets.symmetric(vertical: 4.0),
+          h4Padding: EdgeInsets.symmetric(vertical: 4.0),
+          h5Padding: EdgeInsets.symmetric(vertical: 2.0),
+          h6Padding: EdgeInsets.symmetric(vertical: 2.0),
+          listIndent: 24.0,
+          listBulletPadding: EdgeInsets.only(left: 10.0),
+
+          // List styles
+          listBullet: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              fontFamily: 'MerriweatherSans'),
+
+          // Table styles
+          tableHead: TextStyle(
+              color: kWhitePurple,
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'MerriweatherSans'),
+          tableBody: TextStyle(
+              color: kOffWhitePurple,
+              fontSize: 16.0,
+              fontFamily: 'MerriweatherSans'),
+          tableHeadAlign: TextAlign.center,
+          tableBorder:
+              TableBorder.all(color: kWhitePurple.withOpacity(0.2), width: 1.0),
+          tableColumnWidth: FlexColumnWidth(),
+          tableCellsPadding: EdgeInsets.all(8.0),
+          tableCellsDecoration:
+              BoxDecoration(color: kWhitePurple.withOpacity(0.1)),
+          tableVerticalAlignment: TableCellVerticalAlignment.middle,
+
+          // Blockquote and code block decorations
+          blockquotePadding: EdgeInsets.all(10.0),
+          blockquoteDecoration: BoxDecoration(
+            color: kWhitePurple.withOpacity(0.1),
+            border: Border(left: BorderSide(color: kWhitePurple, width: 4.0)),
+          ),
+          codeblockPadding: EdgeInsets.all(12.0),
+          codeblockDecoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+            border:
+                Border.all(color: kWhitePurple.withOpacity(0.3), width: 1.0),
+          ),
+          horizontalRuleDecoration: BoxDecoration(
+            border: Border(top: BorderSide(color: kWhitePurple, width: 1.0)),
+          ),
+
+          // Text alignment
+          textAlign: WrapAlignment.start,
+          h1Align: WrapAlignment.start,
+          h2Align: WrapAlignment.start,
+          h3Align: WrapAlignment.start,
+          h4Align: WrapAlignment.start,
+          h5Align: WrapAlignment.start,
+          h6Align: WrapAlignment.start,
+          unorderedListAlign: WrapAlignment.start,
+          orderedListAlign: WrapAlignment.start,
+          blockquoteAlign: WrapAlignment.start,
+          codeblockAlign: WrapAlignment.start,
+
+          // Text scale
+          textScaleFactor: 1.1,
         ),
+
+        // styleSheet: MarkdownStyleSheet(
+        //   // Base text style
+        //   p: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 18,
+        //     fontWeight: FontWeight.w300,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   // Bold text
+        //   strong: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 18,
+        //     fontWeight: FontWeight.bold,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   // Italic text
+        //   em: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 18,
+        //     fontWeight: FontWeight.w300,
+        //     fontStyle: FontStyle.italic,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   // Headers
+        //   h1: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 24,
+        //     fontWeight: FontWeight.bold,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   h2: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 22,
+        //     fontWeight: FontWeight.bold,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   h3: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 20,
+        //     fontWeight: FontWeight.bold,
+        //     fontFamily: 'MerriweatherSans',
+        //   ),
+        //   // Code blocks
+        //   code: TextStyle(
+        //     color: kLighterWhitePurple,
+        //     fontSize: 16,
+        //     fontFamily: 'monospace',
+        //     backgroundColor: Colors.black26,
+        //   ),
+        // ),
       ),
     );
   }
