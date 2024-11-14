@@ -148,7 +148,7 @@ async def extract_and_vectorize_route(session_id:str):
             retrievers=[bm25_retriever, pinecone_retriever], weights=[0.5, 0.5]
         )
         print("retriever setup")
-        # Setup prompts and chains...
+        # Setup prompts and chains... 
 
         ### Contextualize question ###
         contextualize_q_system_prompt = (
@@ -175,23 +175,10 @@ async def extract_and_vectorize_route(session_id:str):
             "{context}"
         )
 
-        direct_system_prompt = (
-            "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
-            "Answer the question based on your general knowledge while maintaining a helpful and informative tone. "
-        )
-
         ### Create prompts for both modes ###
         rag_qa_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", rag_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-
-        direct_qa_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", direct_system_prompt),
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
@@ -203,8 +190,6 @@ async def extract_and_vectorize_route(session_id:str):
 
         rag_question_answer_chain = create_stuff_documents_chain(llm, rag_qa_prompt)
         rag_chain = create_retrieval_chain(history_aware_retriever, rag_question_answer_chain)
-        direct_chain = direct_qa_prompt | llm
-
         
         print("chain setup")
         # Your State class and call_model function
@@ -225,45 +210,40 @@ async def extract_and_vectorize_route(session_id:str):
                     use_rag=False
                 )
 
-
         async def call_model(state: State):
-            # Initialize empty accumulated state
-            accumulated_state = {
-                "chat_history": [],
-                "context": "",
-                "answer": ""
-            }
-
-            async for chunk in rag_chain.astream(state):
-                if "answer" in chunk:
-                    message_chunk = AIMessageChunk(content=chunk["answer"])
-                    accumulated_state["answer"] += chunk["answer"]
-                    # Yield both the message chunk and a valid state update
-                    yield {
-                        "messages": [message_chunk],
-                        "answer": accumulated_state["answer"]  # Include valid state update
-                    }
-                if "context" in chunk:
-                    accumulated_state["context"] = chunk["context"]
-                    yield {"context": chunk["context"]}  # Valid state update for context
-
-            # Final state update
-            final_messages = [
-                HumanMessage(state["input"]),
-                AIMessage(accumulated_state["answer"]),
-            ]
+            accumulated_answer = ""
+            last_content = ""  # Track last content to avoid duplicates
             
-            yield {
-                "chat_history": final_messages,
-                "answer": accumulated_state["answer"],
-                "context": accumulated_state["context"]
-            }              
+            async for chunk in rag_chain.astream(state):
+                # We only want the final answer after retrieval and processing
+                # The history aware retriever output will be in a different format
+                if ("answer" in chunk and isinstance(chunk["answer"], str) and 
+                    "source_documents" in chunk):  # This indicates it's from the final RAG chain
+                    new_content = chunk["answer"]
+                    if new_content != last_content:  # Avoid duplicates
+                        message_chunk = AIMessageChunk(content=new_content)
+                        accumulated_answer += new_content
+                        last_content = new_content
+                        yield {"messages": [message_chunk]}
 
+            # Update chat history once at the end
+            if accumulated_answer:
+                final_messages = [
+                    HumanMessage(content=state["input"]),
+                    AIMessage(content=accumulated_answer)
+                ]
+                
+                yield {
+                    "chat_history": final_messages,
+                    "answer": accumulated_answer,
+                    "context": state.get("context", "")
+                }
 
         # Create and store LangGraph app
         workflow = StateGraph(state_schema=State)
         workflow.add_edge(START, "model")
         workflow.add_node("model", call_model)
+        workflow.set_entry_point("model")
 
         memory = MemorySaver()
         global_langgraph_app = workflow.compile(checkpointer=memory)
