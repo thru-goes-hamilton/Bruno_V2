@@ -219,7 +219,7 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
       );
 
       if (response.statusCode == 200) {
-        truncateDatabase();
+        truncateDatabase(chatHandler.sessionId);
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           SnackBar(content: Text('File deleted successfully')),
         );
@@ -268,9 +268,9 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     }
   }
 
-  void truncateDatabaseWithBeacon() {
+  void truncateDatabaseWithBeacon(String sessionId) {
     // Define the endpoint URL
-    const url = 'https://bruno-v2.onrender.com/truncate';
+    String url = 'https://bruno-v2.onrender.com/truncate/$sessionId';
 
     // Send a beacon request to the server to truncate the database
     html.window.navigator.sendBeacon(url, null);
@@ -292,11 +292,11 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     html.window.navigator.sendBeacon(url, null);
   }
 
-  Future<void> truncateDatabase() async {
+  Future<void> truncateDatabase(String sessionId) async {
     try {
       // Send the HTTP POST request to the truncate endpoint
       final response = await http.post(
-        Uri.parse('https://bruno-v2.onrender.com/truncate'),
+        Uri.parse('https://bruno-v2.onrender.com/truncate/$sessionId'),
       );
 
       // Check if the response indicates success
@@ -355,14 +355,13 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
     print('Generated Session ID: $chatHandler.sessionId');
     html.window.onBeforeUnload.listen((event) {
       if (event is html.BeforeUnloadEvent) {
-        truncateDatabaseWithBeacon();
+        truncateDatabaseWithBeacon(chatHandler.sessionId);
         deleteAllFilesWithBeacon(chatHandler.sessionId);
         clearStateWithBeacon(chatHandler.sessionId);
         print("about to exit");
         event.returnValue = 'Some return value here';
       }
     });
-    
   }
 
   @override
@@ -544,9 +543,29 @@ class _BrunoState extends State<Bruno> with WidgetsBindingObserver {
                                   ),
                                   child: IconButton(
                                     icon: Iconify(Carbon.send_filled,
-                                        size: 20, color: kWhitePurple),
+                                        size: 20, color: isUploading|isExtracting?kLightPurple:kWhitePurple),
                                     onPressed: () async {
-                                      await sendQuery(context);
+                                      if (isUploading | isExtracting) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "Press the send button after the file is finished processing",
+                                              style: TextStyle(
+                                                  color: kWhitePurple), // Snackbar text color
+                                            ),
+                                            backgroundColor: kLightPurple,
+                                                // Snackbar background color
+                                            duration: Duration(
+                                                seconds:
+                                                    2), // Duration for how long the Snackbar will be visible
+                                            behavior: SnackBarBehavior
+                                                .floating, // Floating Snackbar
+                                          ),
+                                        );
+                                      } else {
+                                        await sendQuery(context);
+                                      }
                                     },
                                   ),
                                 ),
