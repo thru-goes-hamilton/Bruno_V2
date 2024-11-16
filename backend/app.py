@@ -496,7 +496,7 @@ async def delete_session_folder(session_id: str):
     except Exception as e:
         return JSONResponse(content={"message": f"An error occurred: {str(e)}"}, status_code=500)
     
-@app.post("/truncate")
+@app.post("/truncate/{session_id}")
 async def truncate_database(session_id: str):
     try:
         print("Entered truncate")
