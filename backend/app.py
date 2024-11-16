@@ -1,29 +1,25 @@
 import json
 import shutil
 import time
+import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-import os
 from pathlib import Path
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Pinecone
-from pinecone import ServerlessSpec, WaitForReadyOptions
+from pinecone import ServerlessSpec
 from dotenv import load_dotenv
 from typing import Sequence
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage,trim_messages
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage,AIMessageChunk,trim_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import add_messages
 from typing_extensions import Annotated, TypedDict
 from langchain_groq import ChatGroq
-from langchain_core.messages import AIMessageChunk, HumanMessage
-import os
-from dotenv import load_dotenv
-from pinecone import ServerlessSpec
 from langchain.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
@@ -152,14 +148,14 @@ async def extract_and_vectorize_route(session_id:str):
             start_time = time.time()
             pc.create_index(
                 name=index_name,
-                dimension=1536,  # dimension for text-embedding-ada-002
+                dimension=768,
                 metric='cosine',
                 spec=spec
             )
+
             print(f"Ran code for creating new index {index_name}")
-            # Wait for index to be ready
-            wait_options = WaitForReadyOptions(timeout=300)  # 5 minutes maximum
-            pc.wait_for_ready(name=index_name, options=wait_options)
+
+            pc.wait_for_ready(name=index_name, timeout = 120)
             
             end_time = time.time()
             print(f"Index {index_name} ready after {end_time - start_time:.2f} seconds")
