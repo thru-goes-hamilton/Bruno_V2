@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from typing import Sequence
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage,trim_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph
@@ -139,7 +139,7 @@ async def extract_and_vectorize_route(session_id:str):
         bm25_retriever = BM25Retriever.from_texts(processed_chunks)
         bm25_retriever.k = 2
 
-        index_name="bruno"
+        index_name=session_id
         from langchain.vectorstores import Pinecone
         vector_store = Pinecone.from_texts(processed_chunks, embeddings, index_name=index_name)
         pinecone_retriever = vector_store.as_retriever(search_kwargs={"k": 2})
@@ -192,6 +192,15 @@ async def extract_and_vectorize_route(session_id:str):
         rag_chain = create_retrieval_chain(history_aware_retriever, rag_question_answer_chain)
         
         print("chain setup")
+
+        trimmer = trim_messages(
+            max_tokens=65,
+            strategy="last",
+            token_counter=llm,
+            include_system=True,
+            allow_partial=False,
+            start_on="human",
+        )
         # Your State class and call_model function
         class State(TypedDict):
             input: str
@@ -211,10 +220,14 @@ async def extract_and_vectorize_route(session_id:str):
                 )
 
         async def call_model(state: State):
-            accumulated_answer = ""
+            accumulated_state = {
+                "chat_history": [],
+                "context": "",
+                "answer": ""
+            }
             last_content = ""  # Track last content to avoid duplicates
-            
-            async for chunk in rag_chain.astream(state):
+            trimmed_messages = trimmer.invoke(state["chat_history"])
+            async for chunk in rag_chain.astream({**state, "chat_history": trimmed_messages}):
                 # We only want the final answer after retrieval and processing
                 # The history aware retriever output will be in a different format
                 if ("answer" in chunk and isinstance(chunk["answer"], str) and 
@@ -222,22 +235,26 @@ async def extract_and_vectorize_route(session_id:str):
                     new_content = chunk["answer"]
                     if new_content != last_content:  # Avoid duplicates
                         message_chunk = AIMessageChunk(content=new_content)
-                        accumulated_answer += new_content
+                        accumulated_state["answer"] += new_content
                         last_content = new_content
                         yield {"messages": [message_chunk]}
 
+                if "context" in chunk:
+                    accumulated_state["context"] = chunk["context"]
+                    yield {"context":chunk["context"]}
+
             # Update chat history once at the end
-            if accumulated_answer:
-                final_messages = [
-                    HumanMessage(content=state["input"]),
-                    AIMessage(content=accumulated_answer)
-                ]
+            
+            final_messages = [
+                HumanMessage(content=state["input"]),
+                AIMessage(content=accumulated_state["answer"])
+            ]
                 
-                yield {
-                    "chat_history": final_messages,
-                    "answer": accumulated_answer,
-                    "context": state.get("context", "")
-                }
+            yield {
+                "chat_history": final_messages,
+                "answer": accumulated_state["answer"],
+                "context": accumulated_state["context"]
+            }
 
         # Create and store LangGraph app
         workflow = StateGraph(state_schema=State)
@@ -306,6 +323,15 @@ async def generate_stream(request: ChatRequest, session_id: str):
         )
         direct_chain = direct_qa_prompt | llm
 
+        trimmer = trim_messages(
+            max_tokens=1000,
+            strategy="last",
+            token_counter=llm,
+            include_system=True,
+            allow_partial=False,
+            start_on="human",
+        )
+
         class State(TypedDict):
             input: str
             chat_history: Annotated[Sequence[BaseMessage], add_messages]
@@ -328,9 +354,11 @@ async def generate_stream(request: ChatRequest, session_id: str):
             current_chat_history = list(state.get("chat_history", []))
             accumulated_answer = ""
 
+            trimmed_messages = trimmer.invoke(state["chat_history"])
+
             async for chunk in direct_chain.astream({
                 "input": state["input"],
-                "chat_history": state["chat_history"]
+                "chat_history": trimmed_messages
             }): 
                 message_chunk = AIMessageChunk(content=chunk.content)
                 yield {"messages": [message_chunk]}
@@ -448,14 +476,13 @@ async def delete_session_folder(session_id: str):
         return JSONResponse(content={"message": f"An error occurred: {str(e)}"}, status_code=500)
     
 @app.post("/truncate")
-async def truncate_database():
+async def truncate_database(session_id: str):
     try:
         print("Entered truncate")
-        index_name = "bruno"
+        index_name = session_id
         if index_name in pc.list_indexes().names():
-            index = pc.Index(index_name)
-            index.delete(delete_all=True)
-            message = f"Index '{index_name}' has been truncated successfully."
+            pc.delete_index(index_name)
+            message = f"Index '{index_name}' has been deleted successfully."
         else:
             message = f"Index '{index_name}' does not exist."
         return JSONResponse(content={"message": message}, status_code=200)
