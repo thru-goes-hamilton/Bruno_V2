@@ -155,7 +155,16 @@ async def extract_and_vectorize_route(session_id:str):
 
             print(f"Ran code for creating new index {index_name}")
 
-            pc.wait_for_ready(name=index_name, timeout = 120)
+            ready = False
+            while not ready:
+                try:
+                    desc = pc.describe_index(index_name)
+                    if desc[7]['ready']:
+                        ready = True
+                except pc.core.client.exceptions.NotFoundException:
+                # NotFoundException means the index is created yet.
+                    pass
+                time.sleep(2)
             
             end_time = time.time()
             print(f"Index {index_name} ready after {end_time - start_time:.2f} seconds")
