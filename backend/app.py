@@ -1,5 +1,6 @@
 import json
 import shutil
+import time
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +8,7 @@ import os
 from pathlib import Path
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Pinecone
-from pinecone import ServerlessSpec
+from pinecone import ServerlessSpec, WaitForReadyOptions
 from dotenv import load_dotenv
 from typing import Sequence
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
@@ -140,6 +141,30 @@ async def extract_and_vectorize_route(session_id:str):
         bm25_retriever.k = 2
 
         index_name=session_id
+
+        # First check if index already exists
+        existing_indexes = pc.list_indexes()
+
+        # If index doesn't exist, create it
+        if index_name not in existing_indexes:
+
+            print(f"Creating new index: {index_name}")
+            start_time = time.time()
+            pc.create_index(
+                name=index_name,
+                dimension=1536,  # dimension for text-embedding-ada-002
+                metric='cosine',
+                spec=spec
+            )
+            print(f"Ran code for creating new index {index_name}")
+            # Wait for index to be ready
+            wait_options = WaitForReadyOptions(timeout=300)  # 5 minutes maximum
+            pc.wait_for_ready(name=index_name, options=wait_options)
+            
+            end_time = time.time()
+            print(f"Index {index_name} ready after {end_time - start_time:.2f} seconds")
+
+
         from langchain.vectorstores import Pinecone
         vector_store = Pinecone.from_texts(processed_chunks, embeddings, index_name=index_name)
         pinecone_retriever = vector_store.as_retriever(search_kwargs={"k": 2})
