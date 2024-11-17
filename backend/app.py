@@ -273,6 +273,7 @@ async def extract_and_vectorize_route(session_id:str):
 
                 if "context" in chunk:
                     accumulated_state["context"] = chunk["context"]
+                    print("Context retrieved: ",accumulated_state["context"])
                     yield {"context":chunk["context"]}
 
             # Update chat history once at the end
