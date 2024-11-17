@@ -160,11 +160,11 @@ async def extract_and_vectorize_route(session_id:str):
                 try:
                     desc = pc.describe_index(str(index_name))
                     print(desc)
-                    if desc[7]['ready']:
+                    if desc['status']['ready']:
                         ready = True
                 except Exception as e:
                     print("Yet to create index, exception is ",e)
-                # NotFoundException means the index is created yet.
+                    # NotFoundException means the index is created yet.
                     pass
                 time.sleep(1)
             
