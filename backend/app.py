@@ -201,17 +201,17 @@ async def extract_and_vectorize_route(session_id:str):
         ### Define system prompts for both modes ###
         rag_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
-            "Use the following pieces of retrieved context to answer "
-            "the question. If the context is not sufficient to answer the question, mention that you are not answering from provided context and continue to answer the question ignoring the context. Ask for additional information that could have helped to answer at the end in one line. If the context is sufficient just answer the question."
+            "Use the following retrieved context to answer "
+            "the question. Do not say anything other than the answer."
             "\n\n"
-            "{context}"
+            "context: {context}"
         )
 
         ### Create prompts for both modes ###
         rag_qa_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", rag_system_prompt),
-                MessagesPlaceholder("chat_history"),
+                # MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
         )
@@ -313,7 +313,6 @@ async def extract_and_vectorize_route(session_id:str):
         )
 
 async def generate_stream(request: ChatRequest, session_id: str):
-    global global_langgraph_app, global_retriever
     """Generator function for streaming responses"""
     if any(UPLOAD_FOLDER.glob("*")):
         # Check if session-specific folder has files
