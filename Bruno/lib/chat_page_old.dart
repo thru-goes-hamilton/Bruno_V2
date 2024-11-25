@@ -95,7 +95,7 @@ class ChatHandler {
               setState(() {
                 // Update the last message's answer with the new content
                 messages[messages.length - 1].answer += content;
-                print(messages[messages.length -1].answer);
+                print(messages[messages.length - 1].answer);
               });
             }
           } catch (e) {
@@ -145,8 +145,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
   String get sessionId => chatHandler.sessionId;
 
   late AnimationController _animationcontroller;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
+  late Animation<double> _animation;
 
   String generateSessionId() {
     final random = Random();
@@ -405,31 +404,35 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
 
     // Initialize AnimationController
     _animationcontroller = AnimationController(
-      duration: Duration(milliseconds: 500),
+      duration: Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // Define slide-in animation from left
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(-1.0, 0.0), // Start slightly off-screen to the left
-      end: Offset.zero, // End at its original position
-    ).animate(
-      CurvedAnimation(
-        parent: _animationcontroller,
-        curve: Curves.easeOut,
-      ),
-    );
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationcontroller,
+      curve: Curves.easeInOut,
+    ));
+    // // Define slide-in animation from left
+    // _slideAnimation = Tween<Offset>(
+    //   begin: Offset(-1.0, 0.0), // Start slightly off-screen to the left
+    //   end: Offset.zero, // End at its original position
+    // ).animate(
+    //   CurvedAnimation(
+    //     parent: _animationcontroller,
+    //     curve: Curves.easeOut,
+    //   ),
+    // );
 
-    // Define fade-in animation
-    _fadeAnimation = Tween<double>(
-      begin: 0.0, // Fully transparent
-      end: 1.0, // Fully visible
-    ).animate(
-      CurvedAnimation(
-        parent: _animationcontroller,
-        curve: Curves.easeOut,
-      ),
-    );
+    // // Define fade-in animation
+    // _fadeAnimation = Tween<double>(
+    //   begin: 0.0, // Fully transparent
+    //   end: 1.0, // Fully visible
+    // ).animate(
+    //   CurvedAnimation(
+    //     parent: _animationcontroller,
+    //     curve: Curves.easeOut,
+    //   ),
+    // );
 
     // Start the animation after a delay (to wait for Hero animation)
     Future.delayed(Duration(milliseconds: 500), () {
@@ -440,6 +443,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
+    _animationcontroller.dispose();
     super.dispose();
   }
 
@@ -479,246 +483,241 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
               ),
               SizedBox(height: 18),
               Expanded(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 200, vertical: 9),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: DynamicChatList(
-                                  messages: chatHandler.messages,
-                                  isLoading: isLoading,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 200, vertical: 9),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: DynamicChatList(
+                          messages: chatHandler.messages,
+                          isLoading: isLoading,
+                        ),
+                      ),
+                      fileName != null
+                          ? Row(
+                              children: [
+                                SizedBox(
+                                  width: 18,
                                 ),
-                              ),
-                              fileName != null
-                                  ? Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 18,
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 4.5),
-                                          child: Chip(
-                                            backgroundColor: kLightPurple,
-                                            deleteIcon: Icon(
-                                              Icons.close,
-                                              size: 18,
-                                              color: kLighterWhitePurple,
-                                            ),
-                                            onDeleted: () {
-                                              deleteFile(fileName!);
-                                              setState(() {
-                                                fileName = null;
-                                              });
-                                            },
-                                            avatar: Icon(
-                                              Icons.insert_drive_file,
-                                              size: 18,
-                                              color: kLighterWhitePurple,
-                                            ),
-                                            label: Text(
-                                              fileName!.length > 8
-                                                  ? fileName!.substring(0, 8) +
-                                                      '...'
-                                                  : fileName!,
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontFamily:
-                                                      "MerriweatherSans",
-                                                  color: kLighterWhitePurple),
-                                            ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4.5),
+                                  child: Chip(
+                                    backgroundColor: kLightPurple,
+                                    deleteIcon: Icon(
+                                      Icons.close,
+                                      size: 18,
+                                      color: kLighterWhitePurple,
+                                    ),
+                                    onDeleted: () {
+                                      deleteFile(fileName!);
+                                      setState(() {
+                                        fileName = null;
+                                      });
+                                    },
+                                    avatar: Icon(
+                                      Icons.insert_drive_file,
+                                      size: 18,
+                                      color: kLighterWhitePurple,
+                                    ),
+                                    label: Text(
+                                      fileName!.length > 8
+                                          ? fileName!.substring(0, 8) + '...'
+                                          : fileName!,
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: "MerriweatherSans",
+                                          color: kLighterWhitePurple),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(child: SizedBox()),
+                              ],
+                            )
+                          : SizedBox(height: 0),
+                      AnimatedBuilder(
+                          animation: _animation,
+                          builder: (context, child) {
+                            return ClipRect(
+                              child: Opacity(
+                                opacity: _animation.value,
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      constraints: BoxConstraints(
+                                        maxHeight:
+                                            150, // Set a maximum height for the text field
+                                      ),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 25),
+                                      decoration: BoxDecoration(
+                                        color: kWhitePurple,
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      child: TextField(
+                                        cursorColor: kDarkPurple,
+                                        controller: _controller,
+                                        maxLines: null, // Allow multiple lines
+                                        keyboardType: TextInputType
+                                            .multiline, // Enable multiline input
+                                        textInputAction: TextInputAction
+                                            .newline, // Use newline action for enter key
+                                        decoration: InputDecoration(
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 9, vertical: 15),
+                                          hintText: "Talk to Bruno...",
+                                          hintStyle: TextStyle(
+                                            color: kDarkPurple,
+                                            fontSize: 18,
+                                            fontFamily: 'MerriweatherSans',
                                           ),
+                                          border: InputBorder.none,
                                         ),
-                                        Expanded(child: SizedBox()),
-                                      ],
-                                    )
-                                  : SizedBox(height: 0),
-                              Stack(
-                                children: [
-                                  Container(
-                                    constraints: BoxConstraints(
-                                      maxHeight:
-                                          150, // Set a maximum height for the text field
-                                    ),
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 25),
-                                    decoration: BoxDecoration(
-                                      color: kWhitePurple,
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: TextField(
-                                      cursorColor: kDarkPurple,
-                                      controller: _controller,
-                                      maxLines: null, // Allow multiple lines
-                                      keyboardType: TextInputType
-                                          .multiline, // Enable multiline input
-                                      textInputAction: TextInputAction
-                                          .newline, // Use newline action for enter key
-                                      decoration: InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 9, vertical: 15),
-                                        hintText: "Talk to Bruno...",
-                                        hintStyle: TextStyle(
+                                        style: TextStyle(
                                           color: kDarkPurple,
                                           fontSize: 18,
                                           fontFamily: 'MerriweatherSans',
                                         ),
-                                        border: InputBorder.none,
-                                      ),
-                                      style: TextStyle(
-                                        color: kDarkPurple,
-                                        fontSize: 18,
-                                        fontFamily: 'MerriweatherSans',
-                                      ),
-                                      onSubmitted: (_) => _handleSubmit(
-                                          context), // Fallback if action is 'done'
-                                      onEditingComplete: () => _handleSubmit(
-                                          context), // Handles pressing Enter
-                                      focusNode: FocusNode(
-                                        onKey: (FocusNode node,
-                                            RawKeyEvent event) {
-                                          if (event.isKeyPressed(
-                                                  LogicalKeyboardKey.enter) &&
-                                              !event.isShiftPressed) {
-                                            // Prevent newline when Enter is pressed without Shift
-                                            _handleSubmit(context);
-                                            return KeyEventResult.handled;
-                                          }
-                                          return KeyEventResult.ignored;
-                                        },
+                                        onSubmitted: (_) => _handleSubmit(
+                                            context), // Fallback if action is 'done'
+                                        onEditingComplete: () => _handleSubmit(
+                                            context), // Handles pressing Enter
+                                        focusNode: FocusNode(
+                                          onKey: (FocusNode node,
+                                              RawKeyEvent event) {
+                                            if (event.isKeyPressed(
+                                                    LogicalKeyboardKey.enter) &&
+                                                !event.isShiftPressed) {
+                                              // Prevent newline when Enter is pressed without Shift
+                                              _handleSubmit(context);
+                                              return KeyEventResult.handled;
+                                            }
+                                            return KeyEventResult.ignored;
+                                          },
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 34,
-                                          height: 34,
-                                          decoration: BoxDecoration(
-                                            color: kLightPurple,
-                                            borderRadius:
-                                                BorderRadius.circular(30),
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      bottom: 0,
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: kLightPurple,
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                            child: IconButton(
+                                              icon: isUploading
+                                                  ? SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                                kWhitePurple),
+                                                      ),
+                                                    )
+                                                  : Iconify(Ic.round_attach_file,
+                                                      size: 20,
+                                                      color: kWhitePurple),
+                                              onPressed: () async {
+                                                if (!isUploading) {
+                                                  // Call uploadFile and another function here
+                                                  await uploadFile(context);
+                                                }
+                                                // await extractAndVectorize();
+                                              },
+                                              padding: EdgeInsets.zero,
+                                            ),
                                           ),
-                                          child: IconButton(
-                                            icon: isUploading
-                                                ? SizedBox(
-                                                    width: 20,
-                                                    height: 20,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<
-                                                                  Color>(
-                                                              kWhitePurple),
+                                          SizedBox(width: 4.5),
+                                          Container(
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: kDarkPurple,
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                            child: IconButton(
+                                              icon: Iconify(Carbon.send_filled,
+                                                  size: 20,
+                                                  color:
+                                                      isUploading | isExtracting
+                                                          ? kLightPurple
+                                                          : kWhitePurple),
+                                              onPressed: () async {
+                                                if (isUploading | isExtracting) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        "Press the send button after the file is finished processing",
+                                                        style: TextStyle(
+                                                            color:
+                                                                kWhitePurple), // Snackbar text color
+                                                      ),
+                                                      backgroundColor:
+                                                          kLightPurple,
+                                                      // Snackbar background color
+                                                      duration: Duration(
+                                                          seconds:
+                                                              2), // Duration for how long the Snackbar will be visible
+                                                      behavior: SnackBarBehavior
+                                                          .floating, // Floating Snackbar
                                                     ),
-                                                  )
-                                                : Iconify(Ic.round_attach_file,
-                                                    size: 20,
-                                                    color: kWhitePurple),
-                                            onPressed: () async {
-                                              if (!isUploading) {
-                                                // Call uploadFile and another function here
-                                                await uploadFile(context);
-                                              }
-                                              // await extractAndVectorize();
-                                            },
-                                            padding: EdgeInsets.zero,
-                                          ),
-                                        ),
-                                        SizedBox(width: 4.5),
-                                        Container(
-                                          width: 34,
-                                          height: 34,
-                                          decoration: BoxDecoration(
-                                            color: kDarkPurple,
-                                            borderRadius:
-                                                BorderRadius.circular(30),
-                                          ),
-                                          child: IconButton(
-                                            icon: Iconify(Carbon.send_filled,
-                                                size: 20,
-                                                color:
-                                                    isUploading | isExtracting
-                                                        ? kLightPurple
-                                                        : kWhitePurple),
-                                            onPressed: () async {
-                                              if (isUploading | isExtracting) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      "Press the send button after the file is finished processing",
-                                                      style: TextStyle(
-                                                          color:
-                                                              kWhitePurple), // Snackbar text color
+                                                  );
+                                                } else if (isSending) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        "Wait for the result from current prompt",
+                                                        style: TextStyle(
+                                                            color:
+                                                                kWhitePurple), // Snackbar text color
+                                                      ),
+                                                      backgroundColor:
+                                                          kLightPurple,
+                                                      // Snackbar background color
+                                                      duration: Duration(
+                                                          seconds:
+                                                              2), // Duration for how long the Snackbar will be visible
+                                                      behavior: SnackBarBehavior
+                                                          .floating, // Floating Snackbar
                                                     ),
-                                                    backgroundColor:
-                                                        kLightPurple,
-                                                    // Snackbar background color
-                                                    duration: Duration(
-                                                        seconds:
-                                                            2), // Duration for how long the Snackbar will be visible
-                                                    behavior: SnackBarBehavior
-                                                        .floating, // Floating Snackbar
-                                                  ),
-                                                );
-                                              } else if (isSending) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      "Wait for the result from current prompt",
-                                                      style: TextStyle(
-                                                          color:
-                                                              kWhitePurple), // Snackbar text color
-                                                    ),
-                                                    backgroundColor:
-                                                        kLightPurple,
-                                                    // Snackbar background color
-                                                    duration: Duration(
-                                                        seconds:
-                                                            2), // Duration for how long the Snackbar will be visible
-                                                    behavior: SnackBarBehavior
-                                                        .floating, // Floating Snackbar
-                                                  ),
-                                                );
-                                              } else {
-                                                isSending = true;
-                                                temp_prompt =
-                                                    _controller.text.trim();
-                                                _controller.clear();
-                                                await sendQuery(
-                                                    context, temp_prompt!);
-                                                isSending = false;
-                                              }
-                                            },
+                                                  );
+                                                } else {
+                                                  isSending = true;
+                                                  temp_prompt =
+                                                      _controller.text.trim();
+                                                  _controller.clear();
+                                                  await sendQuery(
+                                                      context, temp_prompt!);
+                                                  isSending = false;
+                                                }
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(width: 4.5),
-                                      ],
+                                          SizedBox(width: 4.5),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                            );
+                          }),
+                    ],
+                  ),
                 ),
               ),
             ],

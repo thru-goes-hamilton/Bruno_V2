@@ -153,7 +153,9 @@ class _DynamicChatListState extends State<DynamicChatList> {
           p: TextStyle(
               color: kOffWhitePurple,
               fontSize: 16.0,
-              fontFamily: 'MerriweatherSans'),
+              fontFamily: 'MerriweatherSans',
+              wordSpacing: 2.0),
+              
           a: TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
