@@ -1,22 +1,38 @@
 import 'package:bruno/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown_selectionarea/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 
-class DynamicChatList extends StatelessWidget {
+class DynamicChatList extends StatefulWidget {
   final List<ChatMessage> messages;
   final bool isLoading;
 
   DynamicChatList({required this.messages, this.isLoading = false});
 
   @override
+  State<DynamicChatList> createState() => _DynamicChatListState();
+}
+
+class _DynamicChatListState extends State<DynamicChatList> {
+  bool isCopied = false;
+
+  // Callback function to update the state
+  void updateCopiedStatus(bool status) {
+    setState(() {
+      isCopied = status;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 0, left: 18, right: 18),
       child: ListView.builder(
-        itemCount: messages.length + (isLoading ? 1 : 0),
+        itemCount: widget.messages.length + (widget.isLoading ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index < messages.length) {
-            final message = messages[index];
+          if (index < widget.messages.length) {
+            final message = widget.messages[index];
             return Column(
               children: [
                 SizedBox(height: 36),
@@ -126,6 +142,12 @@ class DynamicChatList extends StatelessWidget {
       ),
       child: MarkdownBody(
         data: answer,
+        builders: {
+          'code': CodeBlockWithCopyButtonBuilder(
+            isCopied: isCopied,
+            onCopied: updateCopiedStatus,
+          ),
+        },
         styleSheet: MarkdownStyleSheet(
           // Base text styles
           p: TextStyle(
@@ -267,57 +289,6 @@ class DynamicChatList extends StatelessWidget {
           // Text scale
           textScaleFactor: 1.1,
         ),
-
-        // styleSheet: MarkdownStyleSheet(
-        //   // Base text style
-        //   p: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 18,
-        //     fontWeight: FontWeight.w300,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   // Bold text
-        //   strong: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 18,
-        //     fontWeight: FontWeight.bold,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   // Italic text
-        //   em: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 18,
-        //     fontWeight: FontWeight.w300,
-        //     fontStyle: FontStyle.italic,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   // Headers
-        //   h1: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 24,
-        //     fontWeight: FontWeight.bold,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   h2: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 22,
-        //     fontWeight: FontWeight.bold,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   h3: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 20,
-        //     fontWeight: FontWeight.bold,
-        //     fontFamily: 'MerriweatherSans',
-        //   ),
-        //   // Code blocks
-        //   code: TextStyle(
-        //     color: kLighterWhitePurple,
-        //     fontSize: 16,
-        //     fontFamily: 'monospace',
-        //     backgroundColor: Colors.black26,
-        //   ),
-        // ),
       ),
     );
   }
@@ -328,4 +299,86 @@ class ChatMessage {
   String answer;
 
   ChatMessage({required this.prompt, required this.answer});
+}
+
+class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
+  final bool isCopied;
+  final Function(bool) onCopied;
+
+  // Constructor that accepts isCopied and onCopied
+  CodeBlockWithCopyButtonBuilder({
+    required this.isCopied,
+    required this.onCopied,
+  });
+
+  int calculate(String str) {
+    List<String> words = str.split(RegExp(r'\s+'));
+    int count = words.length;
+    return count;
+  }
+
+  @override
+  Widget visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    String codeContent = element.textContent;
+    return calculate(codeContent)<2?Container(
+          padding: EdgeInsets.symmetric(horizontal: 5.0,vertical: 3),
+          decoration: BoxDecoration(
+            color: kLightPurple,
+            borderRadius: BorderRadius.circular(8.0),
+            border:
+                Border.all(color: kLightPurple, width: 1.0),
+          ),
+          child: SelectableText(
+            codeContent,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.0,
+              backgroundColor: kLightPurple,
+              fontFamily: 'MerriweatherSans',
+            ),
+          ),
+        ):Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.all(12.0),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+            border:
+                Border.all(color: Colors.white.withOpacity(0.3), width: 1.0),
+          ),
+          child: SelectableText(
+            codeContent,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.0,
+              backgroundColor: Colors.black,
+              fontFamily: 'MerriweatherSans',
+            ),
+          ),
+        ),
+        Positioned(
+          top: 8.0,
+          right: 8.0,
+          child: IconButton(
+            icon: Icon(
+              isCopied ? Icons.check_circle_outline : Icons.copy,
+              color: Colors.white,
+            ),
+            onPressed: () async {
+              // Perform the copy action
+              await Clipboard.setData(ClipboardData(text: codeContent));
+
+              // After copying, change the icon
+              onCopied(true); // Update state in the parent
+
+              Future.delayed(Duration(seconds: 2), () {
+                onCopied(false); // Reset to original icon after 2 seconds
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
