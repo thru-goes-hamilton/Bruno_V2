@@ -101,5 +101,4 @@ A variant of Retrieval Augmented Generation that focuses on adding more context 
 - Handling image and tabular data from PDFs
 - Support multiple file upload
 - Include authentication and store chats in database
-- Resolve memory related bugs when chatting without PDF
 - Include web search in it
