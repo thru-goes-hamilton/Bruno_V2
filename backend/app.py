@@ -116,20 +116,22 @@ async def extract_and_vectorize_route(session_id:str):
         )
         
         processed_chunks = []
-        for chunk in chunks:
-            prompt = prompt_template.format(
-                WHOLE_DOCUMENT=all_text,
-                CHUNK_CONTENT=chunk
-            )
-            try:
-                # Send to LLM if within token limit
-                response = llm.invoke(prompt)
-                processed_chunks.append(response.content)
-            except Exception as e:
-                print(f"Error processing chunk: {e}")
-                processed_chunks=[]
-                processed_chunks=chunks
-                break
+        if len(all_text) <= 28000:
+            for chunk in chunks:
+                prompt = prompt_template.format(
+                    WHOLE_DOCUMENT=all_text,
+                    CHUNK_CONTENT=chunk
+                )
+                try:
+                    # Send to LLM if within token limit
+                    response = llm.invoke(prompt)
+                    modified_chunk = chunk + "\n" + response.content
+                    processed_chunks.append(modified_chunk)
+                except Exception as e:
+                    print(f"Error processing chunk: {e}")
+                    processed_chunks.append(chunk)
+        else:
+            processed_chunks=chunks
         
 
         # Create retrievers...
@@ -202,7 +204,7 @@ async def extract_and_vectorize_route(session_id:str):
         rag_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
             "Use the following retrieved context to answer "
-            "the question. Do not say anything other than the answer."
+            "the question. Do not include the rephrased question."
             "\n\n"
             "context: {context}"
         )
@@ -226,7 +228,7 @@ async def extract_and_vectorize_route(session_id:str):
         print("chain setup")
 
         trimmer = trim_messages(
-            max_tokens=65,
+            max_tokens=1000,
             strategy="last",
             token_counter=llm,
             include_system=True,
@@ -343,7 +345,7 @@ async def generate_stream(request: ChatRequest, session_id: str):
     if (global_langgraph_app is None) and (not use_rag):
         direct_system_prompt = (
             "You are an assistant named Bruno(inspired from your creators pet dog) for question-answering tasks. "
-            "Answer only the question based on your general knowledge while maintaining a helpful and informative tone. "
+            "Answer the question based on your general knowledge while maintaining a helpful and informative tone. Do not mention the rephrased question in the answer"
         )
 
         direct_qa_prompt = ChatPromptTemplate.from_messages(
