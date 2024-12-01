@@ -11,8 +11,6 @@ import 'package:iconify_flutter/icons/ic.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'dart:html' as html;
 import 'constants.dart';
 
@@ -28,7 +26,7 @@ class ChatHandler {
     print("entered second send query, prompt:$prompt");
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a prompt')),
+        const SnackBar(content: Text('Please enter a prompt')),
       );
       return;
     }
@@ -196,15 +194,15 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
           print("Atmepting to extract");
           await extractAndVectorize(context);
 
-          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-            SnackBar(content: Text('File uploaded successfully')),
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('File uploaded successfully')),
           );
         } else {
           throw Exception('Failed to upload file');
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error uploading file: $e')),
       );
     } finally {
@@ -228,7 +226,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
       if (response.statusCode == 200) {
         truncateDatabase(chatHandler.sessionId);
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          SnackBar(content: Text('File deleted successfully')),
+          const SnackBar(content: Text('File deleted successfully')),
         );
       } else {
         throw Exception('Failed to delete file');
@@ -310,7 +308,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
       // Check if the response indicates success
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          SnackBar(content: Text('Database truncated successfully')),
+          const SnackBar(content: Text('Database truncated successfully')),
         );
       } else {
         throw Exception('Failed to truncate database');
@@ -333,7 +331,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
       // Check if the response indicates success
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          SnackBar(content: Text('All files deleted successfully')),
+          const SnackBar(content: Text('All files deleted successfully')),
         );
       } else {
         throw Exception('Failed to delete all files');
@@ -356,7 +354,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
   void _handleSubmit(BuildContext context) async {
     if (isUploading | isExtracting) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             "Press the send button after the file is finished processing",
             style: TextStyle(color: kWhitePurple),
@@ -368,7 +366,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
       );
     } else if (isSending) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             "Wait for the result from current prompt",
             style: TextStyle(color: kWhitePurple),
@@ -404,7 +402,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
 
     // Initialize AnimationController
     _animationcontroller = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
@@ -435,7 +433,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
     // );
 
     // Start the animation after a delay (to wait for Hero animation)
-    Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       _animationcontroller.forward();
     });
   }
@@ -455,11 +453,11 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           color: kDarkPurple,
-          padding: EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
+          padding: const EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Hero(
@@ -481,10 +479,10 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                   ),
                 ],
               ),
-              SizedBox(height: 18),
+              const SizedBox(height: 18),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 200, vertical: 9),
+                  padding: const EdgeInsets.symmetric(horizontal: 200, vertical: 9),
                   child: Column(
                     children: [
                       Expanded(
@@ -496,7 +494,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                       fileName != null
                           ? Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 18,
                                 ),
                                 Padding(
@@ -504,7 +502,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                       const EdgeInsets.symmetric(vertical: 4.5),
                                   child: Chip(
                                     backgroundColor: kLightPurple,
-                                    deleteIcon: Icon(
+                                    deleteIcon: const Icon(
                                       Icons.close,
                                       size: 18,
                                       color: kLighterWhitePurple,
@@ -515,26 +513,26 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                         fileName = null;
                                       });
                                     },
-                                    avatar: Icon(
+                                    avatar: const Icon(
                                       Icons.insert_drive_file,
                                       size: 18,
                                       color: kLighterWhitePurple,
                                     ),
                                     label: Text(
                                       fileName!.length > 8
-                                          ? fileName!.substring(0, 8) + '...'
+                                          ? '${fileName!.substring(0, 8)}...'
                                           : fileName!,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 16,
                                           fontFamily: "MerriweatherSans",
                                           color: kLighterWhitePurple),
                                     ),
                                   ),
                                 ),
-                                Expanded(child: SizedBox()),
+                                const Expanded(child: SizedBox()),
                               ],
                             )
-                          : SizedBox(height: 0),
+                          : const SizedBox(height: 0),
                       AnimatedBuilder(
                           animation: _animation,
                           builder: (context, child) {
@@ -544,12 +542,12 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                 child: Stack(
                                   children: [
                                     Container(
-                                      constraints: BoxConstraints(
+                                      constraints: const BoxConstraints(
                                         maxHeight:
                                             150, // Set a maximum height for the text field
                                       ),
                                       padding:
-                                          EdgeInsets.symmetric(horizontal: 25),
+                                          const EdgeInsets.symmetric(horizontal: 25),
                                       decoration: BoxDecoration(
                                         color: kWhitePurple,
                                         borderRadius: BorderRadius.circular(30),
@@ -562,7 +560,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                             .multiline, // Enable multiline input
                                         textInputAction: TextInputAction
                                             .newline, // Use newline action for enter key
-                                        decoration: InputDecoration(
+                                        decoration: const InputDecoration(
                                           contentPadding: EdgeInsets.symmetric(
                                               horizontal: 9, vertical: 15),
                                           hintText: "Talk to Bruno...",
@@ -573,7 +571,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                           ),
                                           border: InputBorder.none,
                                         ),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: kDarkPurple,
                                           fontSize: 18,
                                           fontFamily: 'MerriweatherSans',
@@ -613,7 +611,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                             ),
                                             child: IconButton(
                                               icon: isUploading
-                                                  ? SizedBox(
+                                                  ? const SizedBox(
                                                       width: 20,
                                                       height: 20,
                                                       child:
@@ -625,7 +623,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                                                 kWhitePurple),
                                                       ),
                                                     )
-                                                  : Iconify(Ic.round_attach_file,
+                                                  : const Iconify(Ic.round_attach_file,
                                                       size: 20,
                                                       color: kWhitePurple),
                                               onPressed: () async {
@@ -638,7 +636,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                               padding: EdgeInsets.zero,
                                             ),
                                           ),
-                                          SizedBox(width: 4.5),
+                                          const SizedBox(width: 4.5),
                                           Container(
                                             width: 34,
                                             height: 34,
@@ -658,7 +656,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                                 if (isUploading | isExtracting) {
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
-                                                    SnackBar(
+                                                    const SnackBar(
                                                       content: Text(
                                                         "Press the send button after the file is finished processing",
                                                         style: TextStyle(
@@ -678,7 +676,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                                 } else if (isSending) {
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
-                                                    SnackBar(
+                                                    const SnackBar(
                                                       content: Text(
                                                         "Wait for the result from current prompt",
                                                         style: TextStyle(
@@ -707,7 +705,7 @@ class _BrunoState extends State<Bruno> with SingleTickerProviderStateMixin {
                                               },
                                             ),
                                           ),
-                                          SizedBox(width: 4.5),
+                                          const SizedBox(width: 4.5),
                                         ],
                                       ),
                                     ),

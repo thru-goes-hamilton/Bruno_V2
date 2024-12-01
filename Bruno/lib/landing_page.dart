@@ -16,11 +16,11 @@ class _LandingPageState extends State<LandingPage> {
   void initState() {
     super.initState();
     // Trigger navigation 1 second after the page is rendered
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Bruno(), // Replace `Bruno` with the target page
+          builder: (context) => const Bruno(), // Replace `Bruno` with the target page
         ),
       );
     });
@@ -33,8 +33,8 @@ class _LandingPageState extends State<LandingPage> {
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
         color: kDarkPurple,
-        padding: EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
-        child: Center(
+        padding: const EdgeInsets.only(top: 18, left: 27, right: 27, bottom: 18),
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

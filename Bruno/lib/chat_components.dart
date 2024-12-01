@@ -8,7 +8,7 @@ class DynamicChatList extends StatefulWidget {
   final List<ChatMessage> messages;
   final bool isLoading;
 
-  DynamicChatList({required this.messages, this.isLoading = false});
+  const DynamicChatList({super.key, required this.messages, this.isLoading = false});
 
   @override
   State<DynamicChatList> createState() => _DynamicChatListState();
@@ -35,14 +35,14 @@ class _DynamicChatListState extends State<DynamicChatList> {
             final message = widget.messages[index];
             return Column(
               children: [
-                SizedBox(height: 36),
+                const SizedBox(height: 36),
                 _buildPromptWidget(message.prompt),
-                SizedBox(height: 9),
+                const SizedBox(height: 9),
                 _buildAnswerWidget(message.answer),
               ],
             );
           } else {
-            return Center(
+            return const Center(
                 child: CircularProgressIndicator(
               color: kWhitePurple,
             ));
@@ -57,7 +57,7 @@ class _DynamicChatListState extends State<DynamicChatList> {
       children: [
         Flexible(
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               color: kLightPurple,
@@ -65,31 +65,31 @@ class _DynamicChatListState extends State<DynamicChatList> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image(
+                const Image(
                   image: AssetImage('images/User icon.png'),
                   height: 30,
                   width: 30,
                 ),
-                SizedBox(width: 18),
+                const SizedBox(width: 18),
                 Flexible(
                   child: MarkdownBody(
                     data: prompt,
                     styleSheet: MarkdownStyleSheet(
                       // Base text style
-                      p: TextStyle(
+                      p: const TextStyle(
                         color: kWhitePurple,
                         fontSize: 18,
                         fontFamily: 'MerriweatherSans',
                       ),
                       // Bold text
-                      strong: TextStyle(
+                      strong: const TextStyle(
                         color: kWhitePurple,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'MerriweatherSans',
                       ),
                       // Italic text
-                      em: TextStyle(
+                      em: const TextStyle(
                         color: kWhitePurple,
                         fontSize: 18,
                         fontWeight: FontWeight.w300,
@@ -97,24 +97,24 @@ class _DynamicChatListState extends State<DynamicChatList> {
                         fontFamily: 'MerriweatherSans',
                       ),
                       // Headers
-                      h1: TextStyle(
+                      h1: const TextStyle(
                         color: kWhitePurple,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'MerriweatherSans',
                       ),
-                      h2: TextStyle(
+                      h2: const TextStyle(
                         color: kWhitePurple,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'MerriweatherSans',
                       ),
                       // Code blocks
-                      code: TextStyle(
+                      code: const TextStyle(
                           color: kDarkPurple,
                           fontSize: 16,
                           fontFamily: 'MerriweatherSans'),
-                      codeblockPadding: EdgeInsets.all(8.0),
+                      codeblockPadding: const EdgeInsets.all(8.0),
                       codeblockDecoration: BoxDecoration(
                         color: Colors.blue,
                         borderRadius: BorderRadius.circular(20.0),
@@ -123,7 +123,7 @@ class _DynamicChatListState extends State<DynamicChatList> {
                     shrinkWrap: true, // Helps with fitting content in the Row
                   ),
                 ),
-                SizedBox(width: 9),
+                const SizedBox(width: 9),
               ],
             ),
           ),
@@ -135,8 +135,8 @@ class _DynamicChatListState extends State<DynamicChatList> {
   Widget _buildAnswerWidget(String answer) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(18),
+      decoration: const BoxDecoration(
         color: kDarkPurple,
         borderRadius: BorderRadius.all(Radius.circular(30)),
       ),
@@ -150,128 +150,128 @@ class _DynamicChatListState extends State<DynamicChatList> {
         },
         styleSheet: MarkdownStyleSheet(
           // Base text styles
-          p: TextStyle(
+          p: const TextStyle(
               color: kOffWhitePurple,
               fontSize: 16.0,
               fontFamily: 'MerriweatherSans',
               wordSpacing: 2.0),
               
-          a: TextStyle(
+          a: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               decoration: TextDecoration.underline,
               fontFamily: 'MerriweatherSans'),
-          code: TextStyle(
+          code: const TextStyle(
             color: kWhitePurple,
             fontSize: 16.0,
             backgroundColor: Colors.black,
             fontFamily: 'MerriweatherSans',
           ),
 
-          h1: TextStyle(
+          h1: const TextStyle(
               color: kWhitePurple,
               fontSize: 24.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          h2: TextStyle(
+          h2: const TextStyle(
               color: kWhitePurple,
               fontSize: 22.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          h3: TextStyle(
+          h3: const TextStyle(
               color: kWhitePurple,
               fontSize: 20.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          h4: TextStyle(
+          h4: const TextStyle(
               color: kWhitePurple,
               fontSize: 18.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          h5: TextStyle(
+          h5: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          h6: TextStyle(
+          h6: const TextStyle(
               color: kWhitePurple,
               fontSize: 14.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          em: TextStyle(
+          em: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               fontStyle: FontStyle.italic,
               fontFamily: 'MerriweatherSans'),
-          strong: TextStyle(
+          strong: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          del: TextStyle(
+          del: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               decoration: TextDecoration.lineThrough,
               fontFamily: 'MerriweatherSans'),
-          blockquote: TextStyle(
+          blockquote: const TextStyle(
               color: kOffWhitePurple,
               fontSize: 18.0,
               fontStyle: FontStyle.italic,
               fontFamily: 'MerriweatherSans'),
-          img: TextStyle(color: kOffWhitePurple),
-          checkbox: TextStyle(color: kOffWhitePurple, fontSize: 16.0),
+          img: const TextStyle(color: kOffWhitePurple),
+          checkbox: const TextStyle(color: kOffWhitePurple, fontSize: 16.0),
 
           // Spacing and padding
           blockSpacing: 10.0,
-          pPadding: EdgeInsets.all(8.0),
-          h1Padding: EdgeInsets.symmetric(vertical: 8.0),
-          h2Padding: EdgeInsets.symmetric(vertical: 6.0),
-          h3Padding: EdgeInsets.symmetric(vertical: 4.0),
-          h4Padding: EdgeInsets.symmetric(vertical: 4.0),
-          h5Padding: EdgeInsets.symmetric(vertical: 2.0),
-          h6Padding: EdgeInsets.symmetric(vertical: 2.0),
+          pPadding: const EdgeInsets.all(8.0),
+          h1Padding: const EdgeInsets.symmetric(vertical: 8.0),
+          h2Padding: const EdgeInsets.symmetric(vertical: 6.0),
+          h3Padding: const EdgeInsets.symmetric(vertical: 4.0),
+          h4Padding: const EdgeInsets.symmetric(vertical: 4.0),
+          h5Padding: const EdgeInsets.symmetric(vertical: 2.0),
+          h6Padding: const EdgeInsets.symmetric(vertical: 2.0),
           listIndent: 24.0,
-          listBulletPadding: EdgeInsets.only(left: 10.0),
+          listBulletPadding: const EdgeInsets.only(left: 10.0),
 
           // List styles
-          listBullet: TextStyle(
+          listBullet: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               fontFamily: 'MerriweatherSans'),
 
           // Table styles
-          tableHead: TextStyle(
+          tableHead: const TextStyle(
               color: kWhitePurple,
               fontSize: 16.0,
               fontWeight: FontWeight.bold,
               fontFamily: 'MerriweatherSans'),
-          tableBody: TextStyle(
+          tableBody: const TextStyle(
               color: kOffWhitePurple,
               fontSize: 16.0,
               fontFamily: 'MerriweatherSans'),
           tableHeadAlign: TextAlign.center,
           tableBorder:
               TableBorder.all(color: kWhitePurple.withOpacity(0.2), width: 1.0),
-          tableColumnWidth: FlexColumnWidth(),
-          tableCellsPadding: EdgeInsets.all(8.0),
+          tableColumnWidth: const FlexColumnWidth(),
+          tableCellsPadding: const EdgeInsets.all(8.0),
           tableCellsDecoration:
               BoxDecoration(color: kWhitePurple.withOpacity(0.1)),
           tableVerticalAlignment: TableCellVerticalAlignment.middle,
 
           // Blockquote and code block decorations
-          blockquotePadding: EdgeInsets.all(10.0),
+          blockquotePadding: const EdgeInsets.all(10.0),
           blockquoteDecoration: BoxDecoration(
             color: kWhitePurple.withOpacity(0.1),
-            border: Border(left: BorderSide(color: kWhitePurple, width: 4.0)),
+            border: const Border(left: BorderSide(color: kWhitePurple, width: 4.0)),
           ),
-          codeblockPadding: EdgeInsets.all(12.0),
+          codeblockPadding: const EdgeInsets.all(12.0),
           codeblockDecoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(8.0),
             border:
                 Border.all(color: kWhitePurple.withOpacity(0.3), width: 1.0),
           ),
-          horizontalRuleDecoration: BoxDecoration(
+          horizontalRuleDecoration: const BoxDecoration(
             border: Border(top: BorderSide(color: kWhitePurple, width: 1.0)),
           ),
 
@@ -323,7 +323,7 @@ class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
   Widget visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     String codeContent = element.textContent;
     return calculate(codeContent)<2?Container(
-          padding: EdgeInsets.symmetric(horizontal: 5.0,vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 5.0,vertical: 3),
           decoration: BoxDecoration(
             color: kLightPurple,
             borderRadius: BorderRadius.circular(8.0),
@@ -332,7 +332,7 @@ class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
           ),
           child: SelectableText(
             codeContent,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16.0,
               backgroundColor: kLightPurple,
@@ -342,7 +342,7 @@ class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
         ):Stack(
       children: [
         Container(
-          padding: EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12.0),
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(8.0),
@@ -351,7 +351,7 @@ class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
           ),
           child: SelectableText(
             codeContent,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16.0,
               backgroundColor: Colors.black,
@@ -374,7 +374,7 @@ class CodeBlockWithCopyButtonBuilder extends MarkdownElementBuilder {
               // After copying, change the icon
               onCopied(true); // Update state in the parent
 
-              Future.delayed(Duration(seconds: 2), () {
+              Future.delayed(const Duration(seconds: 2), () {
                 onCopied(false); // Reset to original icon after 2 seconds
               });
             },
